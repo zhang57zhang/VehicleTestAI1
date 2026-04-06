@@ -1,0 +1,635 @@
+/**
+ * 车载控制器测试AI平台 - 组件样式文件
+ * 包含: 卡片、表单、按钮、表格、标签、上传等组件样式
+ */
+
+/* ========== 卡片组件 ========== */
+.card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.card-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-body {
+    padding: 16px;
+}
+
+/* ========== 表单组件 ========== */
+.form-group {
+    margin-bottom: 14px;
+}
+
+.form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.form-label.required::after {
+    content: ' *';
+    color: var(--danger);
+}
+
+.form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-select {
+    appearance: none;
+    background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748B' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 10px center;
+    padding-right: 30px;
+}
+
+/* ========== 按钮组件 ========== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-secondary {
+    background: var(--bg-light);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--border);
+}
+
+.btn-success {
+    background: var(--secondary);
+    color: white;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-warning {
+    background: var(--warning);
+    color: white;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ========== 上传组件 ========== */
+.upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.upload-zone:hover {
+    border-color: var(--primary);
+    background: #EFF6FF;
+}
+
+.upload-icon {
+    font-size: 36px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.upload-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.upload-text strong {
+    color: var(--primary);
+}
+
+/* ========== 文件项组件 ========== */
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: var(--bg-light);
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.file-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--primary);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.file-info {
+    flex: 1;
+}
+
+.file-name {
+    font-weight: 500;
+    font-size: 13px;
+    margin-bottom: 2px;
+}
+
+.file-meta {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.file-actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* ========== 标签组件 ========== */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.tag-success {
+    background: #D1FAE5;
+    color: #059669;
+}
+
+.tag-warning {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.tag-danger {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.tag-info {
+    background: #E0E7FF;
+    color: #4F46E5;
+}
+
+.tag-primary {
+    background: #DBEAFE;
+    color: #2563EB;
+}
+
+/* ========== 进度条组件 ========== */
+.progress-bar {
+    height: 6px;
+    background: var(--bg-light);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+/* ========== 表格组件 ========== */
+.table-container {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+}
+
+.table th {
+    background: var(--bg-light);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.table tr:hover {
+    background: #F8FAFC;
+}
+
+/* ========== 仪表盘卡片 ========== */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.dashboard-stat {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+.dashboard-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* ========== 空状态 ========== */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.empty-state-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+}
+
+/* ========== 标签页容器 ========== */
+.tabs-container {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+}
+
+.tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 500;
+}
+
+/* ========== 子区块 ========== */
+.subsection {
+    background: #FAFBFC;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.subsection-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ========== 复选框组 ========== */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--bg-light);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.checkbox-item input {
+    margin: 0;
+}
+
+/* ========== 技能网格 ========== */
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.skill-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--bg-light);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.skill-item:hover {
+    background: #E2E8F0;
+}
+
+.skill-item.selected {
+    background: #DBEAFE;
+    border: 1px solid var(--primary);
+}
+
+.skill-item input {
+    margin-right: 8px;
+}
+
+.skill-name {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.skill-desc {
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+/* ========== 测试用例项 ========== */
+.test-case-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.test-case-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: #F8FAFC;
+    border-bottom: 1px solid var(--border);
+}
+
+.test-case-id {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 12px;
+}
+
+.test-case-content {
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.test-case-row {
+    display: flex;
+    margin-bottom: 6px;
+}
+
+.test-case-label {
+    width: 80px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.test-case-value {
+    flex: 1;
+}
+
+/* ========== 功能点项 ========== */
+.function-point-item {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: #FAFBFC;
+}
+
+.function-point-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.function-point-id {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 13px;
+}
+
+.function-point-source {
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: #E2E8F0;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.function-point-quote {
+    font-size: 12px;
+    color: var(--text-primary);
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    border-left: 3px solid var(--primary);
+    margin-top: 8px;
+    font-style: italic;
+}
+
+/* ========== 审核结果 ========== */
+.review-result {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.review-pass {
+    background: #D1FAE5;
+    border-left: 4px solid var(--secondary);
+}
+
+.review-warning {
+    background: #FEF3C7;
+    border-left: 4px solid var(--warning);
+}
+
+.review-error {
+    background: #FEE2E2;
+    border-left: 4px solid var(--danger);
+}
+
+.review-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.review-content {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* ========== 台架卡片 ========== */
+.bench-card {
+    background: white;
+    border-radius: 10px;
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    margin-bottom: 12px;
+}
+
+.bench-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.bench-name {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.bench-location {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.bench-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.bench-metric {
+    text-align: center;
+}
+
+.bench-metric-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.bench-metric-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+/* ========== 阶段项 ========== */
+.phase-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.phase-name {
+    flex: 1;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.phase-timeline {
+    width: 120px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.phase-progress {
+    width: 100px;
+}
+
+.phase-owner {
+    width: 80px;
+    font-size: 12px;
+}
+
+.phase-status {
+    width: 70px;
+}

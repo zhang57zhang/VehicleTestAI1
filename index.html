@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>车载控制器测试AI平台 - 完整版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS Modules -->
+    <link rel="stylesheet" href="frontend/css/main.css">
+    <link rel="stylesheet" href="frontend/css/components.css">
+    <link rel="stylesheet" href="frontend/css/modals.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="toolbar">
+            <div class="toolbar-logo">
+                <i class="fas fa-car"></i>
+                <span>车载控制器测试AI平台</span>
+            </div>
+            <div class="toolbar-actions">
+                <button class="toolbar-btn toolbar-btn-secondary" onclick="app.showModelConfig()"><i class="fas fa-robot"></i>配置LLM</button>
+                <button class="toolbar-btn toolbar-btn-secondary" onclick="app.newProject()"><i class="fas fa-plus"></i>新建项目</button>
+                <button class="toolbar-btn toolbar-btn-secondary" onclick="app.openProject()"><i class="fas fa-folder-open"></i>打开项目</button>
+                <button class="toolbar-btn toolbar-btn-primary" onclick="app.saveProject()"><i class="fas fa-save"></i>保存</button>
+            </div>
+        </header>
+        <main class="main-content">
+            <aside class="project-sidebar">
+                <div class="sidebar-header">
+                    <span class="sidebar-title" id="projectTitle">项目名称</span>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="toolbar-btn toolbar-btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="app.refreshTree()" title="刷新项目树"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                </div>
+                <div class="tree-container" id="projectTree"></div>
+            </aside>
+            <div class="content-area">
+                <div class="tab-bar" id="tabBar"></div>
+                <div class="page-container" id="pageContainer"></div>
+            </div>
+            <aside class="ai-sidebar" id="aiSidebar">
+                <div class="ai-sidebar-header">
+                    <span class="sidebar-title"><i class="fas fa-robot" style="color: var(--primary);"></i>AI助手</span>
+                    <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="app.toggleAISidebar()"><i class="fas fa-minus" id="aiToggleIcon"></i></button>
+                </div>
+                <div class="ai-chat" id="aiChatContainer" style="height: 250px;">
+                    <div class="ai-chat-messages" id="aiMessages">
+                        <div class="ai-message assistant">您好！我是AI测试助手，支持需求分析、策略生成、用例设计、脚本生成等功能。请选择具体功能模块开始。</div>
+                    </div>
+                    <div class="ai-chat-input">
+                        <input type="text" placeholder="输入问题..." id="aiInput" onkeypress="if(event.key==='Enter')app.sendAIMessage()">
+                        <button class="btn btn-primary" style="padding: 8px 10px;" onclick="app.sendAIMessage()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </aside>
+        </main>
+        <!-- AI助手最小化图标 - 放在main外面确保始终可见 -->
+        <div class="ai-minimized-icon" id="aiMinimizedIcon" style="display: none;" onclick="app.toggleAISidebar()">
+            <i class="fas fa-robot"></i>
+        </div>
+        <footer class="status-bar">
+            <div class="status-item"><span class="status-indicator success"></span><span>系统就绪</span></div>
+            <div class="status-item"><span id="statusProject">未打开项目</span></div>
+            <div class="status-item"><span id="statusTime"></span></div>
+            <div class="status-item" style="margin-left: auto;"><span>v2.0.0</span></div>
+        </footer>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div style="text-align: center;">
+            <div class="loading-spinner" style="width: 36px; height: 36px; margin: 0 auto 12px;"></div>
+            <div style="font-size: 13px; color: var(--text-secondary);" id="loadingText">处理中，请稍候...</div>
+        </div>
+    </div>
+
+    <!-- 模态对话框 -->
+    <!-- 打开项目对话框 -->
+    <div class="modal-overlay" id="openProjectModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-folder-open" style="color: var(--primary); margin-right: 8px;"></i>打开项目</span>
+                <div class="modal-close" onclick="app.closeModal('openProjectModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body" id="projectList" style="max-height: 400px; padding: 0;">
+                <!-- 项目列表将动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('openProjectModal')">取消</button>
+                <button class="btn btn-primary" onclick="app.closeModal('openProjectModal')">新建项目</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 无项目对话框 -->
+    <div class="modal-overlay" id="noProjectsModal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-info-circle" style="color: var(--info); margin-right: 8px;"></i>提示</span>
+                <div class="modal-close" onclick="app.closeModal('noProjectsModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 30px;">
+                <div style="font-size: 48px; color: var(--text-secondary); margin-bottom: 16px;"><i class="fas fa-folder-open"></i></div>
+                <div style="font-size: 14px; color: var(--text-secondary);">暂无保存的项目</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">请先创建新项目</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="app.closeModal('noProjectsModal'); app.newProject();">创建新项目</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI模型配置对话框 -->
+    <div class="modal-overlay" id="modelConfigModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-robot" style="color: var(--primary); margin-right: 8px;"></i>AI模型配置</span>
+                <div class="modal-close" onclick="app.closeModal('modelConfigModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">模型提供商</label>
+                    <select class="form-input form-select" id="modelProvider" onchange="app.onProviderChange()">
+                        <option value="glm">智谱GLM (推荐)</option>
+                        <option value="openai">OpenAI (GPT)</option>
+                        <option value="azure">Azure OpenAI</option>
+                        <option value="claude">Claude (Anthropic)</option>
+                        <option value="gemini">Gemini (Google)</option>
+                        <option value="custom">自定义API</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">模型名称</label>
+                    <input type="text" class="form-input" id="modelName" placeholder="例如: glm-4-plus, glm-4, gpt-4">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">API Key</label>
+                    <input type="password" class="form-input" id="apiKey" placeholder="请输入API Key">
+                </div>
+                <div class="form-group" id="baseUrlGroup">
+                    <label class="form-label">API地址</label>
+                    <input type="text" class="form-input" id="baseUrl" placeholder="https://api.openai.com/v1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">最大Token数</label>
+                    <input type="number" class="form-input" id="maxTokens" value="4096" min="100" max="128000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">温度参数</label>
+                    <input type="number" class="form-input" id="temperature" value="0.7" min="0" max="2" step="0.1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('modelConfigModal')">取消</button>
+                <button class="btn btn-primary" onclick="app.saveModelConfigFromModal()"><i class="fas fa-save"></i> 保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 测试策略结果对话框 -->
+    <div class="modal-overlay" id="strategyResultModal">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-chess" style="color: var(--primary); margin-right: 8px;"></i>测试策略生成结果</span>
+                <div class="modal-close" onclick="app.closeModal('strategyResultModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body" id="strategyResultContent">
+                <!-- 结果内容将动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('strategyResultModal')">关闭</button>
+                <button class="btn btn-success" onclick="app.closeModal('strategyResultModal'); app.showToast('策略已保存到项目', 'success');"><i class="fas fa-save"></i> 保存策略</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 测试设计结果对话框 -->
+    <div class="modal-overlay" id="designResultModal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-pencil-ruler" style="color: var(--secondary); margin-right: 8px;"></i>测试方案生成结果</span>
+                <div class="modal-close" onclick="app.closeModal('designResultModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body" id="designResultContent">
+                <!-- 结果内容将动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('designResultModal')">关闭</button>
+                <button class="btn btn-success" onclick="app.closeModal('designResultModal'); app.showToast('方案已保存到项目', 'success');"><i class="fas fa-save"></i> 保存全部</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 测试用例结果对话框 -->
+    <div class="modal-overlay" id="testcaseResultModal">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-list-check" style="color: var(--warning); margin-right: 8px;"></i>测试用例生成结果</span>
+                <div class="modal-close" onclick="app.closeModal('testcaseResultModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+                    <div class="dashboard-card"><div class="dashboard-stat">45</div><div class="dashboard-label">用例总数</div></div>
+                    <div class="dashboard-card"><div class="dashboard-stat">35</div><div class="dashboard-label">可自动化</div></div>
+                    <div class="dashboard-card"><div class="dashboard-stat">P0: 12, P1: 18, P2: 15</div><div class="dashboard-label">优先级分布</div></div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <button class="btn btn-secondary" style="margin-right: 8px;"><i class="fas fa-download"></i> 导出Excel</button>
+                    <button class="btn btn-secondary"><i class="fas fa-download"></i> 导出JSON</button>
+                </div>
+                <div class="table-container" style="max-height: 300px;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>用例ID</th>
+                                <th>用例名称</th>
+                                <th>优先级</th>
+                                <th>自动化</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>TC_VCU_TQ_001</td><td>扭矩请求-正向正常值</td><td><span class="tag tag-danger">P0</span></td><td><span class="tag tag-success">可自动化</span></td><td><span class="tag tag-primary">已生成</span></td></tr>
+                            <tr><td>TC_VCU_TQ_002</td><td>扭矩请求-边界值(0%)</td><td><span class="tag tag-danger">P0</span></td><td><span class="tag tag-success">可自动化</span></td><td><span class="tag tag-primary">已生成</span></td></tr>
+                            <tr><td>TC_VCU_PWR_001</td><td>功率限制-峰值功率</td><td><span class="tag tag-warning">P1</span></td><td><span class="tag tag-warning">待自动化</span></td><td><span class="tag tag-primary">已生成</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('testcaseResultModal')">关闭</button>
+                <button class="btn btn-primary" onclick="app.closeModal('testcaseResultModal'); app.switchTab('script');"><i class="fas fa-code"></i> 生成脚本</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 测试脚本结果对话框 -->
+    <div class="modal-overlay" id="scriptResultModal">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-code" style="color: var(--info); margin-right: 8px;"></i>测试脚本生成结果</span>
+                <div class="modal-close" onclick="app.closeModal('scriptResultModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div class="dashboard-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 16px;">
+                    <div class="dashboard-card"><div class="dashboard-stat">15</div><div class="dashboard-label">脚本总数</div></div>
+                    <div class="dashboard-card"><div class="dashboard-stat">12</div><div class="dashboard-label">已生成</div></div>
+                    <div class="dashboard-card"><div class="dashboard-stat">Python</div><div class="dashboard-label">脚本类型</div></div>
+                    <div class="dashboard-card"><div class="dashboard-stat">CANoe</div><div class="dashboard-label">测试工具</div></div>
+                </div>
+                <div class="test-case-item">
+                    <div class="test-case-header">
+                        <span class="test-case-id">test_vcu_torque_request.py</span>
+                        <div><span class="tag tag-info">Python</span> <span class="tag tag-success">已生成</span></div>
+                    </div>
+                    <div class="test-case-content" style="background: #1E293B; color: #E2E8F0; font-family: monospace; padding: 14px; border-radius: 6px; max-height: 200px; overflow-y: auto;">
+                        <pre style="font-size: 11px; line-height: 1.5;">import can
+import time
+
+class TorqueRequestTest:
+    def __init__(self):
+        self.bus = can.interface.Bus(channel=0, bustype='pcan')
+
+    def test_torque_normal(self):
+        """扭矩请求-正向正常值测试"""
+        msg = can.Message(arbitration_id=0x100, data=[0x00, 0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        self.bus.send(msg)
+        time.sleep(0.1)
+        response = self.wait_for_response(timeout=1.0)
+        assert response.data[0] == 0x01, "扭矩响应错误"</pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('scriptResultModal')">关闭</button>
+                <button class="btn btn-success" onclick="app.closeModal('scriptResultModal'); app.copyToExecution();"><i class="fas fa-copy"></i> 拷贝至执行</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 脚本编辑对话框 -->
+    <div class="modal-overlay" id="scriptEditModal">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-edit" style="color: var(--primary); margin-right: 8px;"></i>编辑脚本</span>
+                <div class="modal-close" onclick="app.closeModal('scriptEditModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">选择脚本</label>
+                    <select class="form-input form-select">
+                        <option>test_vcu_torque_request.py</option>
+                        <option>test_vcu_power_limit.py</option>
+                        <option>test_vcu_diag_fault.py</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">脚本内容</label>
+                    <textarea class="form-input" style="min-height: 300px; font-family: monospace; font-size: 12px; background: #1E293B; color: #E2E8F0;">import can
+import time
+
+class TorqueRequestTest:
+    def __init__(self):
+        self.bus = can.interface.Bus(channel=0, bustype='pcan')
+
+    def test_torque_normal(self):
+        """扭矩请求-正向正常值测试"""
+        msg = can.Message(arbitration_id=0x100, data=[0x00, 0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        self.bus.send(msg)
+        time.sleep(0.1)
+        response = self.wait_for_response(timeout=1.0)
+        assert response.data[0] == 0x01, "扭矩响应错误"</textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('scriptEditModal')">取消</button>
+                <button class="btn btn-primary" onclick="app.saveScript(); app.closeModal('scriptEditModal');"><i class="fas fa-save"></i> 保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 测试报告结果对话框 -->
+    <div class="modal-overlay" id="reportResultModal">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-file-invoice" style="color: var(--danger); margin-right: 8px;"></i>测试报告预览</span>
+                <div class="modal-close" onclick="app.closeModal('reportResultModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body" id="reportResultContent">
+                <!-- 报告内容将动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('reportResultModal')">关闭</button>
+                <button class="btn btn-primary" onclick="app.showToast('报告已导出', 'success');"><i class="fas fa-download"></i> 导出PDF</button>
+                <button class="btn btn-success" onclick="app.closeModal('reportResultModal');"><i class="fas fa-check"></i> 完成</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加台架对话框 -->
+    <div class="modal-overlay" id="addBenchModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-server" style="color: var(--primary); margin-right: 8px;"></i>添加测试台架</span>
+                <div class="modal-close" onclick="app.closeModal('addBenchModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label required">台架名称</label>
+                    <input type="text" class="form-input" id="benchName" placeholder="例如: dSPACE HIL #3">
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">台架类型</label>
+                    <select class="form-input form-select" id="benchType">
+                        <option>HIL台架</option>
+                        <option>MIL/SIL台架</option>
+                        <option>功率台架</option>
+                        <option>PIL台架</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">型号</label>
+                    <input type="text" class="form-input" id="benchModel" placeholder="例如: SCALEXIO">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">位置</label>
+                    <input type="text" class="form-input" id="benchLocation" placeholder="例如: A区-03">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">所属实验室</label>
+                    <select class="form-input form-select" id="benchLab">
+                        <option>动力HIL实验室</option>
+                        <option>底盘HIL实验室</option>
+                        <option>整车仿真实验室</option>
+                        <option>MIL/SIL实验室</option>
+                        <option>环境应力实验室</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('addBenchModal')">取消</button>
+                <button class="btn btn-primary" onclick="app.saveBench()"><i class="fas fa-plus"></i> 添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加人员对话框 -->
+    <div class="modal-overlay" id="addPersonnelModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-user-plus" style="color: var(--secondary); margin-right: 8px;"></i>添加测试人员</span>
+                <div class="modal-close" onclick="app.closeModal('addPersonnelModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label required">姓名</label>
+                    <input type="text" class="form-input" id="personnelName" placeholder="例如: 张工程师">
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">角色</label>
+                    <select class="form-input form-select" id="personnelRole">
+                        <option>测试负责人</option>
+                        <option>测试工程师</option>
+                        <option>测试分析师</option>
+                        <option>自动化工程师</option>
+                        <option>实习生</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">专业领域</label>
+                    <input type="text" class="form-input" id="personnelExpertise" placeholder="例如: VCU HIL测试">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('addPersonnelModal')">取消</button>
+                <button class="btn btn-primary" onclick="app.savePersonnel()"><i class="fas fa-plus"></i> 添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加定时任务对话框 -->
+    <div class="modal-overlay" id="addScheduleModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-clock" style="color: var(--secondary); margin-right: 8px;"></i>添加定时任务</span>
+                <div class="modal-close" onclick="app.closeModal('addScheduleModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label required">任务名称</label>
+                    <input type="text" class="form-input" placeholder="例如: 每日回归测试">
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">执行套件</label>
+                    <select class="form-input form-select">
+                        <option>扭矩请求测试套件</option>
+                        <option>功率限制测试套件</option>
+                        <option>故障诊断测试套件</option>
+                        <option>全部测试套件</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">执行计划</label>
+                    <select class="form-input form-select">
+                        <option>每日</option>
+                        <option>每周</option>
+                        <option>每月</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">执行时间</label>
+                    <input type="time" class="form-input" value="18:00">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('addScheduleModal')">取消</button>
+                <button class="btn btn-primary" onclick="app.closeModal('addScheduleModal'); app.showToast('定时任务已添加', 'success');"><i class="fas fa-plus"></i> 添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI结果查看对话框 -->
+    <div class="modal-overlay" id="aiResultModal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-brain" style="color: var(--info); margin-right: 8px;"></i>AI交互详情</span>
+                <div class="modal-close" onclick="app.closeModal('aiResultModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div style="background: var(--bg-light); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">用户请求:</div>
+                    <div style="font-size: 13px;">生成扭矩请求边界测试用例</div>
+                </div>
+                <div style="padding: 16px; border-left: 3px solid var(--primary);">
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">AI响应:</div>
+                    <div style="font-size: 13px; line-height: 1.8;">
+                        已为您生成扭矩请求边界测试用例共8个，包括：<br>
+                        - 边界值0%测试<br>
+                        - 边界值50%测试<br>
+                        - 边界值100%测试<br>
+                        - 异常值-1%测试<br>
+                        - 异常值101%测试<br>
+                        - 响应时间边界测试<br>
+                        - 精度验证测试
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('aiResultModal')">关闭</button>
+                <button class="btn btn-primary" onclick="app.closeModal('aiResultModal'); app.showToast('已复制到剪贴板', 'success');"><i class="fas fa-copy"></i> 复制</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面配置对话框 -->
+    <div class="modal-overlay" id="configurePageModal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <span class="modal-title"><i class="fas fa-cog" style="color: var(--primary); margin-right: 8px;"></i>页面配置</span>
+                <div class="modal-close" onclick="app.closeModal('configurePageModal')"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">页面名称</label>
+                    <input type="text" class="form-input" placeholder="例如: 缺陷管理" value="待使用">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">页面类型</label>
+                    <select class="form-input form-select">
+                        <option>功能模块</option>
+                        <option>数据看板</option>
+                        <option>配置页面</option>
+                        <option>自定义页面</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">页面描述</label>
+                    <textarea class="form-input" style="min-height: 80px;" placeholder="描述此页面的功能用途..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">图标</label>
+                    <select class="form-input form-select">
+                        <option>fa-bug - 缺陷</option>
+                        <option>fa-cogs - 配置</option>
+                        <option>fa-chart-bar - 图表</option>
+                        <option>fa-tools - 工具</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.closeModal('configurePageModal')">取消</button>
+                <button class="btn btn-primary" onclick="app.closeModal('configurePageModal'); app.showToast('页面配置已保存', 'success');"><i class="fas fa-save"></i> 保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .inland-security-footer {
+          position: fixed;
+          z-index: 10;
+          bottom: 0;
+          right: 0;
+          width: fit-content;
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .tooltip-container {
+          position: relative;
+        }
+
+        .trigger-content {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: center;
+          padding: 8px;
+          background-color: transparent;
+          border-radius: 8px;
+          cursor: pointer;
+        }
+
+        .minimax-link {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          font-weight: 300;
+          color: #adadad;
+          text-decoration: none;
+        }
+
+        .minimax-link:visited {
+          color: #adadad;
+        }
+
+        .minimax-link:hover {
+          color: #666666;
+        }
+
+        .tooltip-content {
+          position: absolute;
+          bottom: 100%;
+          right: 0;
+          display: none;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          padding: 8px;
+          padding-bottom: 16px;
+          font-size: 12px;
+          line-height: 17px;
+          background-color: #fafafa;
+          border-radius: 12px;
+          white-space: nowrap;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          color: #171717;
+        }
+
+        .tooltip-content::after {
+          content: '';
+          position: absolute;
+          bottom: -8px;
+          left: 0;
+          right: 0;
+          height: 16px;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+          display: flex;
+        }
+
+        .info-section {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 12px;
+        }
+
+        .beian-link {
+          display: flex;
+          align-items: center;
+          text-decoration: none;
+          color: #171717;
+        }
+
+        .beian-icon {
+          width: 14px;
+          height: 14px;
+          margin-right: 2px;
+        }
+
+        .underline-text {
+          color: #171717;
+          text-decoration: underline;
+        }
+
+        .underline-text:hover {
+          color: #000000;
+        }
+
+        @media (prefers-color-scheme: dark) {
+          .trigger-content {
+            background-color: transparent;
+          }
+
+          .minimax-link,
+          .minimax-link:visited {
+            color: #666666;
+          }
+
+          .minimax-link:hover {
+            color: #adadad;
+          }
+
+          .tooltip-content {
+            background-color: #262626;
+            color: #ededed;
+          }
+
+          .beian-link,
+          .underline-text {
+            color: #ededed;
+          }
+
+          .underline-text:hover {
+            color: #ffffff;
+          }
+        }
+    </style>
+    <div class="inland-security-footer">
+      <div class="tooltip-container">
+        <div class="trigger-content">
+          <a href="https://www.minimaxi.com/" target="_blank" rel="noreferrer" class="minimax-link">
+            <span>© 2026 MiniMax</span>
+          </a>
+        </div>
+        <div class="tooltip-content">
+          <section class="info-section">
+            <span>上海稀宇科技有限公司</span>
+          </section>
+
+          <section class="info-section">
+            <a class="beian-link" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31010402010179" target="_blank" rel="noreferrer">
+              <img alt="hailuo-beian-icon" src="https://cdn.hailuoai.com/hailuo-video-web/public_assets/223037d3-79fd-4db0-a456-749f38a6a14b.png" class="beian-icon">
+              <span class="underline-text">沪公网安备31010402010179号</span>
+            </a>
+            <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" class="underline-text">
+              沪ICP备2023003282号-38
+            </a>
+          </section>
+
+          <section class="info-section">
+            <span>模型名称：MiniMax</span>
+            <span>备案号：Shanghai-MiniMax-202505230046</span>
+          </section>
+
+          <section class="info-section">
+            <a href="https://agent.minimaxi.com/doc/zh/terms-of-service.html" target="_blank" rel="noreferrer" class="underline-text">
+              用户协议
+            </a>
+            <a href="https://agent.minimaxi.com/doc/zh/privacy-policy.html" target="_blank" rel="noreferrer" class="underline-text">
+              隐私政策
+            </a>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScript Modules -->
+    <script src="frontend/js/utils/helpers.js"></script>
+    <script src="frontend/js/utils/ui-utils.js"></script>
+    <script src="frontend/api-service.js"></script>
+    
+    <!-- Page Modules -->
+    <script src="frontend/js/pages/requirements-page.js"></script>
+    <script src="frontend/js/pages/strategy-page.js"></script>
+    <script src="frontend/js/pages/design-page.js"></script>
+    <script src="frontend/js/pages/testcase-page.js"></script>
+    <script src="frontend/js/pages/script-page.js"></script>
+    <script src="frontend/js/pages/log-page.js"></script>
+    <script src="frontend/js/pages/evaluation-page.js"></script>
+    <script src="frontend/js/pages/report-page.js"></script>
+    <script src="frontend/js/pages/resource-page.js"></script>
+    <script src="frontend/js/pages/bench-page.js"></script>
+    <script src="frontend/js/pages/progress-page.js"></script>
+    <script src="frontend/js/pages/automation-page.js"></script>
+    <script src="frontend/js/pages/aiassistant-page.js"></script>
+    <script src="frontend/js/pages/pending-page.js"></script>
+    
+    <!-- Main Application -->
+    <script src="frontend/js/app.js"></script>
+</body>
+</html>
