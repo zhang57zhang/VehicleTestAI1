@@ -12,12 +12,28 @@ import uuid
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from services.ai_service import get_ai_service, GLMService
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 # 导入模型
 from models import db, Project, Requirement, TestStrategy, TestDesign, TestCase, TestLog, DBCFile, AIHistory
 
 app = Flask(__name__)
 CORS(app)
+
+# ===== AI 服务配置 =====
+ZHIPUAI_API_KEY = os.environ.get('ZHIPUAI_API_KEY')
+ZHIPUAI_MODEL = os.environ.get('ZHIPUAI_MODEL', 'glm-4.7')
+
+def get_configured_ai_service():
+    """获取配置好的 AI 服务实例"""
+    if ZHIPUAI_API_KEY:
+        return get_ai_service('glm', api_key=ZHIPUAI_API_KEY, model=ZHIPUAI_MODEL)
+    else:
+        print("⚠️ 未配置 ZHIPUAI_API_KEY，使用 Mock 服务")
+        return get_ai_service('mock')
 
 # ===== 数据库配置 =====
 import os
@@ -185,12 +201,19 @@ def generate_strategy():
         data = request.json
         project_id = data.get('project_id')
         
-        # 获取需求
+        # 获取需求（从数据库或请求体）
         requirements = Requirement.query.filter_by(project_id=project_id).all()
-        req_text = '\n'.join([f"{r.id}: {r.name}\n{r.description}" for r in requirements])
+        if requirements:
+            req_text = '\n'.join([f"{r.id}: {r.name}\n{r.description}" for r in requirements])
+        elif data.get('requirements'):
+            # 如果请求体中提供了需求文本，直接使用
+            req_text = data.get('requirements')
+        else:
+            # 没有需求时使用默认提示
+            req_text = "请生成一个通用的 VCU 测试策略"
         
         # 调用 AI 服务
-        ai_service = get_ai_service()
+        ai_service = get_configured_ai_service()
         prompt = f"请根据以下需求生成测试策略：\n\n{req_text}"
         content = ai_service.generate(prompt)
         
@@ -226,7 +249,7 @@ def generate_design():
         strategy_text = '\n\n'.join([s.content for s in strategies])
         
         # 调用 AI 服务
-        ai_service = get_ai_service()
+        ai_service = get_configured_ai_service()
         prompt = f"请根据以下测试策略生成测试设计：\n\n{strategy_text}"
         content = ai_service.generate(prompt)
         
@@ -304,6 +327,338 @@ def health_check():
         'database': 'SQLite',
         'timestamp': datetime.now().isoformat()
     })
+
+# ===== 文件上传 API =====
+
+ALLOWED_EXTENSIONS = {'txt', 'md', 'pdf', 'doc', 'docx', 'xlsx', 'xls', 'dbc', 'arxml', 'blf', 'asc', 'csv', 'mf4'}
+
+@app.route('/api/upload/<project_id>/<file_type>', methods=['POST'])
+def upload_file(project_id, file_type):
+    """上传文件"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'error': 'No file provided'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'No file selected'}), 400
+        
+        if file and allowed_file_upload(file.filename):
+            filename = secure_filename(file.filename)
+            file_id = str(uuid.uuid4())
+            
+            # 创建项目特定目录
+            project_dir = os.path.join(UPLOAD_FOLDER, project_id, file_type)
+            os.makedirs(project_dir, exist_ok=True)
+            
+            # 保存文件
+            file_path = os.path.join(project_dir, filename)
+            file.save(file_path)
+            
+            return jsonify({
+                'success': True,
+                'file_id': file_id,
+                'path': file_path,
+                'filename': filename
+            }), 201
+        else:
+            return jsonify({'success': False, 'error': 'File type not allowed'}), 400
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+def allowed_file_upload(filename):
+    """检查文件扩展名"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# ===== AI 生成测试用例 API =====
+
+@app.route('/api/ai/generate-testcases', methods=['POST'])
+def generate_testcases():
+    """AI生成测试用例"""
+    try:
+        data = request.json
+        project_id = data.get('project_id')
+        design_content = data.get('design', '')
+        
+        # 获取设计内容
+        if not design_content:
+            designs = TestDesign.query.filter_by(project_id=project_id).all()
+            if designs:
+                design_content = designs[-1].content
+        
+        if not design_content:
+            design_content = "基于VCU测试需求生成测试用例"
+        
+        # 调用 AI 服务
+        ai_service = get_configured_ai_service()
+        prompt = f"""请根据以下测试设计生成详细的测试用例，包括：
+1. 用例ID
+2. 用例名称
+3. 测试目的
+4. 前置条件
+5. 测试步骤
+6. 预期结果
+7. 优先级
+
+测试设计：
+{design_content}
+
+请生成至少10个测试用例，用表格格式输出。"""
+        
+        content = ai_service.generate(prompt)
+        
+        # 保存到数据库
+        testcase_id = str(uuid.uuid4())
+        testcase = TestCase(
+            id=testcase_id,
+            project_id=project_id,
+            name=f"测试用例_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            priority='P1',
+            steps=content,
+            expected='参见用例内容'
+        )
+        
+        db.session.add(testcase)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'testcase': {
+                'id': testcase_id,
+                'name': testcase.name,
+                'content': content
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ===== AI 生成测试脚本 API =====
+
+@app.route('/api/ai/generate-scripts', methods=['POST'])
+def generate_scripts():
+    """AI生成测试脚本"""
+    try:
+        data = request.json
+        project_id = data.get('project_id')
+        testcase_content = data.get('testcases', '')
+        
+        if not testcase_content:
+            testcases = TestCase.query.filter_by(project_id=project_id).all()
+            if testcases:
+                testcase_content = testcases[-1].steps
+        
+        # 调用 AI 服务
+        ai_service = get_configured_ai_service()
+        prompt = f"""请根据以下测试用例生成Python自动化测试脚本。
+
+测试用例：
+{testcase_content}
+
+要求：
+1. 使用pytest框架
+2. 包含完整的测试函数
+3. 支持CAN通信（使用python-can库）
+4. 包含断言和错误处理
+
+请生成完整的Python代码。"""
+        
+        content = ai_service.generate(prompt)
+        
+        return jsonify({
+            'success': True,
+            'script': {
+                'language': 'python',
+                'framework': 'pytest',
+                'content': content
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ===== AI 解析日志 API =====
+
+@app.route('/api/ai/parse-log', methods=['POST'])
+def parse_log():
+    """AI解析测试日志"""
+    try:
+        data = request.json
+        project_id = data.get('project_id')
+        log_content = data.get('log_content', '')
+        
+        if not log_content:
+            log_content = "模拟日志：测试执行完成，50个用例通过，2个失败"
+        
+        # 调用 AI 服务
+        ai_service = get_configured_ai_service()
+        prompt = f"""请分析以下测试日志，提取关键信息：
+
+日志内容：
+{log_content}
+
+请输出：
+1. 测试摘要（通过/失败数量）
+2. 发现的问题
+3. 性能数据
+4. 建议的改进措施"""
+        
+        content = ai_service.generate(prompt)
+        
+        # 保存到数据库
+        log_id = str(uuid.uuid4())
+        log = TestLog(
+            id=log_id,
+            project_id=project_id,
+            name=f"测试日志_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            content=log_content,
+            analysis_result=content
+        )
+        
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'analysis': {
+                'id': log_id,
+                'summary': content[:500],
+                'full_result': content
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ===== AI 生成测试报告 API =====
+
+@app.route('/api/ai/generate-report', methods=['POST'])
+def generate_report():
+    """AI生成测试报告"""
+    try:
+        data = request.json
+        project_id = data.get('project_id')
+        
+        # 收集项目数据
+        project = Project.query.get(project_id)
+        requirements = Requirement.query.filter_by(project_id=project_id).all()
+        strategies = TestStrategy.query.filter_by(project_id=project_id).all()
+        designs = TestDesign.query.filter_by(project_id=project_id).all()
+        testcases = TestCase.query.filter_by(project_id=project_id).all()
+        logs = TestLog.query.filter_by(project_id=project_id).all()
+        
+        # 构建报告数据
+        report_data = f"""
+项目：{project.name if project else '未知'}
+需求数量：{len(requirements)}
+测试策略数量：{len(strategies)}
+测试设计数量：{len(designs)}
+测试用例数量：{len(testcases)}
+测试日志数量：{len(logs)}
+"""
+        
+        # 调用 AI 服务
+        ai_service = get_configured_ai_service()
+        prompt = f"""请根据以下测试数据生成一份完整的测试报告：
+
+{report_data}
+
+要求包含：
+1. 测试概述
+2. 测试范围
+3. 测试结果统计
+4. 问题清单
+5. 风险评估
+6. 结论与建议
+
+请使用Markdown格式输出。"""
+        
+        content = ai_service.generate(prompt)
+        
+        return jsonify({
+            'success': True,
+            'report': {
+                'project_name': project.name if project else '未知',
+                'generated_at': datetime.now().isoformat(),
+                'content': content,
+                'statistics': {
+                    'requirements': len(requirements),
+                    'strategies': len(strategies),
+                    'designs': len(designs),
+                    'testcases': len(testcases),
+                    'logs': len(logs)
+                }
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ===== DBC 解析 API =====
+
+@app.route('/api/dbc/parse', methods=['POST'])
+def parse_dbc():
+    """解析DBC文件"""
+    try:
+        data = request.json
+        dbc_content = data.get('content', '')
+        
+        # 简单解析DBC
+        messages = []
+        signals = []
+        
+        if dbc_content:
+            # 解析BO_（报文）
+            for line in dbc_content.split('\n'):
+                if line.startswith('BO_'):
+                    parts = line.split()
+                    if len(parts) >= 3:
+                        messages.append({
+                            'id': parts[1],
+                            'name': parts[2],
+                            'dlc': parts[3] if len(parts) > 3 else 8
+                        })
+                # 解析SG_（信号）
+                elif line.strip().startswith('SG_'):
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        signals.append({
+                            'name': parts[1],
+                            'start_bit': parts[3] if len(parts) > 3 else 0,
+                            'length': parts[4] if len(parts) > 4 else 8
+                        })
+        
+        return jsonify({
+            'success': True,
+            'dbc': {
+                'messages': messages[:20],  # 限制返回数量
+                'signals': signals[:50],
+                'message_count': len(messages),
+                'signal_count': len(signals)
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ===== 获取DBC列表 API =====
+
+@app.route('/api/dbc/list/<project_id>', methods=['GET'])
+def list_dbc(project_id):
+    """获取项目的DBC文件列表"""
+    try:
+        dbc_dir = os.path.join(UPLOAD_FOLDER, project_id, 'dbcFile')
+        if os.path.exists(dbc_dir):
+            files = os.listdir(dbc_dir)
+            dbc_files = [f for f in files if f.endswith('.dbc')]
+            return jsonify({
+                'success': True,
+                'files': dbc_files
+            })
+        return jsonify({
+            'success': True,
+            'files': []
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -336,14 +336,25 @@ if __name__ == "__main__":
 class GLMService(AIServiceBase):
     """
     智谱GLM AI服务
-    支持GLM-4-Plus, GLM-4, GLM-3-Turbo, GLM-5等模型
+    支持GLM-4-Plus, GLM-4, GLM-3-Turbo, GLM-4.7, GLM-5等模型
     使用zhipuai库调用API
     """
 
-    def __init__(self, api_key: str = None, model: str = "glm-4-plus"):
+    # 支持的模型列表（按优先级排序）
+    SUPPORTED_MODELS = [
+        "glm-4.7",
+        "glm-4-plus",
+        "glm-4",
+        "glm-3-turbo",
+        "glm-4-air",
+        "glm-4-airx",
+    ]
+
+    def __init__(self, api_key: str = None, model: str = "glm-4.7"):
         super().__init__(api_key)
         self.model = model
         self.client = None
+        self._model_validated = False
 
         # Initialize zhipuai client if api_key is provided
         if self.api_key:
@@ -351,6 +362,7 @@ class GLMService(AIServiceBase):
                 from zhipuai import ZhipuAI
 
                 self.client = ZhipuAI(api_key=self.api_key)
+                print(f"✅ 智谱AI客户端初始化成功，模型: {self.model}")
             except ImportError:
                 print(
                     "Warning: zhipuai library not installed. Run: pip install zhipuai"
@@ -358,78 +370,57 @@ class GLMService(AIServiceBase):
                 self.client = None
 
     def generate(self, prompt: str, max_tokens: int = 4096) -> str:
-        """调用智谱GLM API生成内容"""
+        """调用智谱GLM API生成内容，支持模型自动回退"""
         if not self.api_key or not self.client:
             # 没有API Key时使用模拟服务
             mock = MockAIService()
             return mock.generate(prompt, max_tokens)
 
-        try:
-            # Use zhipuai library to call API
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "你是一个专业的车载控制器测试工程师，专注于VCU测试文档生成。请用中文回答，输出格式化的Markdown文档或JSON格式。",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.6,
-            )
+        # 尝试模型列表（优先使用配置的模型）
+        models_to_try = [self.model]
+        for m in self.SUPPORTED_MODELS:
+            if m not in models_to_try:
+                models_to_try.append(m)
 
-            # Get response content
-            if response and hasattr(response, "choices") and len(response.choices) > 0:
-                return response.choices[0].message.content
-            else:
-                return "API返回异常: 无有效响应"
-
-        except Exception as e:
-            error_msg = str(e)
-            print(f"GLM API error: {error_msg}")
-
-            # Try fallback with requests if zhipuai fails
+        last_error = None
+        for model in models_to_try:
             try:
-                import requests
-
-                headers = {
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                }
-
-                data = {
-                    "model": self.model,
-                    "messages": [
+                response = self.client.chat.completions.create(
+                    model=model,
+                    messages=[
                         {
                             "role": "system",
-                            "content": "你是一个专业的车载控制器测试工程师，专注于VCU测试文档生成。请用中文回答。",
+                            "content": "你是一个专业的车载控制器测试工程师，专注于VCU测试文档生成。请用中文回答，输出格式化的Markdown文档或JSON格式。",
                         },
                         {"role": "user", "content": prompt},
                     ],
-                    "max_tokens": max_tokens,
-                    "temperature": 0.6,
-                }
-
-                response = requests.post(
-                    "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-                    headers=headers,
-                    json=data,
-                    timeout=120,
+                    temperature=0.6,
                 )
-                result = response.json()
 
-                if "choices" in result and len(result["choices"]) > 0:
-                    return result["choices"][0]["message"]["content"]
-                elif "error" in result:
-                    return f"API错误: {result['error'].get('message', '未知错误')}"
+                # Get response content
+                if response and hasattr(response, "choices") and len(response.choices) > 0:
+                    if model != self.model:
+                        print(f"⚠️ 模型 {self.model} 不可用，已回退到 {model}")
+                    print(f"✅ GLM API 调用成功，模型: {model}")
+                    return response.choices[0].message.content
                 else:
-                    return f"API返回异常: {result}"
+                    last_error = "API返回异常: 无有效响应"
+                    continue
 
-            except Exception as fallback_error:
-                print(f"Fallback API error: {fallback_error}")
-                # 最后回退到模拟服务
-                mock = MockAIService()
-                return mock.generate(prompt, max_tokens)
+            except Exception as e:
+                error_msg = str(e)
+                last_error = error_msg
+                print(f"⚠️ 模型 {model} 调用失败: {error_msg[:100]}")
+                
+                # 如果是认证错误或API key错误，不需要尝试其他模型
+                if "401" in error_msg or "403" in error_msg or "invalid" in error_msg.lower():
+                    break
+                continue
+
+        # 所有模型都失败，回退到模拟服务
+        print(f"❌ 所有模型尝试失败，回退到 Mock 服务")
+        mock = MockAIService()
+        return mock.generate(prompt, max_tokens)
 
     def analyze(self, content: str) -> Dict:
         """调用智谱GLM API分析内容"""

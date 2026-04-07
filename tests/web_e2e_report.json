@@ -1,0 +1,101 @@
+{
+  "timestamp": "2026-04-07 17:33:31",
+  "project_id": "db691818-314f-432c-98fa-3a78165e83ab",
+  "summary": {
+    "passed": 17,
+    "failed": 0,
+    "skipped": 1
+  },
+  "details": [
+    {
+      "page": "需求分析",
+      "action": "服务检查",
+      "status": "PASS"
+    },
+    {
+      "page": "需求分析",
+      "action": "创建项目",
+      "status": "PASS"
+    },
+    {
+      "page": "需求分析",
+      "action": "手动添加",
+      "status": "PASS"
+    },
+    {
+      "page": "需求分析",
+      "action": "查询列表",
+      "status": "PASS"
+    },
+    {
+      "page": "需求分析",
+      "action": "文档导入",
+      "status": "PASS"
+    },
+    {
+      "page": "测试策略",
+      "action": "上传设计",
+      "status": "PASS"
+    },
+    {
+      "page": "测试策略",
+      "action": "查询策略",
+      "status": "PASS"
+    },
+    {
+      "page": "测试设计",
+      "action": "查询设计",
+      "status": "PASS"
+    },
+    {
+      "page": "测试用例",
+      "action": "上传DBC",
+      "status": "PASS"
+    },
+    {
+      "page": "测试用例",
+      "action": "上传通信矩阵",
+      "status": "PASS"
+    },
+    {
+      "page": "测试用例",
+      "action": "上传告警列表",
+      "status": "PASS"
+    },
+    {
+      "page": "测试用例",
+      "action": "上传诊断列表",
+      "status": "PASS"
+    },
+    {
+      "page": "测试用例",
+      "action": "查询用例",
+      "status": "PASS"
+    },
+    {
+      "page": "测试脚本",
+      "action": "上传接口表",
+      "status": "PASS"
+    },
+    {
+      "page": "测试脚本",
+      "action": "上传脚本模板",
+      "status": "SKIP"
+    },
+    {
+      "page": "测试日志",
+      "action": "DBC解析",
+      "status": "PASS"
+    },
+    {
+      "page": "测试日志",
+      "action": "上传ARXML",
+      "status": "PASS"
+    },
+    {
+      "page": "测试报告",
+      "action": "上传模板",
+      "status": "PASS"
+    }
+  ]
+}
