@@ -338,6 +338,15 @@ backend/
 
 后端支持多种AI服务，可以通过环境变量配置:
 
+### GLM-4.7服务（推荐）
+```bash
+# 在 backend/.env 文件中配置
+GLM_API_KEY=your_api_key_here
+GLM_MODEL=glm-4.7
+```
+
+GLM-4.7 是智谱AI的最新模型，响应时间约50秒-3分钟，适合生成测试文档。
+
 ### Mock服务（默认）
 使用模拟AI服务，返回预设的测试文档模板。
 
@@ -356,6 +365,8 @@ export MINIMAX_API_KEY=your_api_key
 | FLASK_APP | Flask应用名 | app |
 | FLASK_ENV | 运行环境 | production |
 | SECRET_KEY | 应用密钥 | random |
+| GLM_API_KEY | 智谱AI API密钥 | - |
+| GLM_MODEL | GLM模型版本 | glm-4.7 |
 | MINIMAX_API_KEY | MiniMax API密钥 | - |
 
 ## 数据存储

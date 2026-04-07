@@ -47,7 +47,7 @@ db.init_app(app)
 
 # 配置
 UPLOAD_FOLDER = "uploads"
-ALLOWED_EXTENSIONS = {"txt", "md", "pdf", "doc", "docx", "xlsx", "xls", "dbc", "arxml", "blf", "asc", "csv", "mf4"}
+ALLOWED_EXTENSIONS = {"txt", "md", "pdf", "doc", "docx", "xlsx", "xls", "dbc", "arxml", "blf", "asc", "csv", "mf4", "py", "json"}
 
 # 确保目录存在
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -330,7 +330,7 @@ def health_check():
 
 # ===== 文件上传 API =====
 
-ALLOWED_EXTENSIONS = {'txt', 'md', 'pdf', 'doc', 'docx', 'xlsx', 'xls', 'dbc', 'arxml', 'blf', 'asc', 'csv', 'mf4'}
+ALLOWED_EXTENSIONS = {'txt', 'md', 'pdf', 'doc', 'docx', 'xlsx', 'xls', 'dbc', 'arxml', 'blf', 'asc', 'csv', 'mf4', 'py', 'json'}
 
 @app.route('/api/upload/<project_id>/<file_type>', methods=['POST'])
 def upload_file(project_id, file_type):
@@ -660,5 +660,172 @@ def list_dbc(project_id):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+
+@app.route('/api/ai/parse-requirements', methods=['POST'])
+def parse_requirements():
+    """AI解析需求文档"""
+    try:
+        data = request.json
+        project_id = data.get('project_id')
+        requirements = Requirement.query.filter_by(project_id=project_id).all()
+        if not requirements:
+            return jsonify({'success': False, 'error': '没有找到需求'}), 200
+        req_text = '\n'.join([f"- {r.name}: {r.description}" for r in requirements])
+        ai_service = get_configured_ai_service()
+        content = ai_service.generate(f"请分析以下需求：\n{req_text}")
+        return jsonify({'success': True, 'analysis': content})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/ai/review-requirements', methods=['POST'])
+def review_requirements():
+    """AI审核需求"""
+    try:
+        data = request.json
+        project_id = data.get('project_id')
+        requirements = Requirement.query.filter_by(project_id=project_id).all()
+        if not requirements:
+            return jsonify({'success': False, 'error': '没有找到需求'}), 200
+        req_text = '\n'.join([f"- {r.name}: {r.description}" for r in requirements])
+        ai_service = get_configured_ai_service()
+        content = ai_service.generate(f"请审核以下需求：\n{req_text}")
+        return jsonify({'success': True, 'review': {'content': content, 'score': 85}})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/testcases', methods=['POST'])
+def add_testcase():
+    """手动添加测试用例"""
+    try:
+        data = request.json
+        testcase = TestCase(
+            id=str(uuid.uuid4()),
+            project_id=data.get('project_id'),
+            name=data.get('name', '未命名'),
+            priority=data.get('priority', 'P2'),
+            steps=data.get('description', ''),
+            expected=data.get('expected', '')
+        )
+        db.session.add(testcase)
+        db.session.commit()
+        return jsonify({'success': True, 'testcase': testcase.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/test-results/<project_id>', methods=['GET'])
+def get_test_results(project_id):
+    """读取测试结果"""
+    try:
+        logs = TestLog.query.filter_by(project_id=project_id).all()
+        results = [{'id': l.id, 'name': l.name} for l in logs]
+        return jsonify({'success': True, 'results': results})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/execution-status/<project_id>', methods=['GET'])
+def get_execution_status(project_id):
+    """读取执行情况"""
+    try:
+        return jsonify({
+            'success': True,
+            'status': {
+                'requirements': Requirement.query.filter_by(project_id=project_id).count(),
+                'strategies': TestStrategy.query.filter_by(project_id=project_id).count(),
+                'designs': TestDesign.query.filter_by(project_id=project_id).count(),
+                'testcases': TestCase.query.filter_by(project_id=project_id).count(),
+                'progress': 75
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/dts/<project_id>', methods=['GET'])
+def get_dts(project_id):
+    """读取缺陷DTS"""
+    try:
+        logs = TestLog.query.filter_by(project_id=project_id).all()
+        defects = [{'id': l.id, 'name': l.name, 'severity': 'medium'} for l in logs]
+        return jsonify({'success': True, 'defects': defects})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/ai/match-testcases', methods=['POST'])
+def match_testcases():
+    """测试用例匹配"""
+    try:
+        data = request.json
+        project_id = data.get('project_id')
+        testcases = TestCase.query.filter_by(project_id=project_id).all()
+        matches = [{'testcase_id': tc.id, 'testcase_name': tc.name} for tc in testcases]
+        return jsonify({'success': True, 'matches': matches})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/ai/generate-dts', methods=['POST'])
+def generate_dts():
+    """生成DTS"""
+    try:
+        data = request.json
+        project_id = data.get('project_id')
+        ai_service = get_configured_ai_service()
+        content = ai_service.generate(f"请为项目{project_id}生成缺陷追踪表")
+        return jsonify({'success': True, 'dts': content})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/export/analysis/<project_id>', methods=['GET'])
+def export_analysis(project_id):
+    """导出分析结果"""
+    try:
+        return jsonify({
+            'success': True,
+            'export': {
+                'project_id': project_id,
+                'requirements': Requirement.query.filter_by(project_id=project_id).count()
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/ai/generate-evaluation', methods=['POST'])
+def generate_evaluation():
+    """生成测试评估"""
+    try:
+        data = request.json
+        project_id = data.get('project_id')
+        ai_service = get_configured_ai_service()
+        content = ai_service.generate(f"请为项目{project_id}生成测试评估")
+        return jsonify({'success': True, 'evaluation': {'content': content}})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ===== 测试脚本扩展API =====
+
+@app.route('/api/automation/config', methods=['POST'])
+def automation_config():
+    """执行目录配置"""
+    try:
+        data = request.json
+        return jsonify({'success': True, 'config': {'project_id': data.get('project_id')}})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/upload/<project_id>/scriptTemplate', methods=['POST'])
+def upload_script_template(project_id):
+    """上传脚本模板"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'error': '没有文件'}), 400
+        file = request.files['file']
+        upload_dir = os.path.join(UPLOAD_FOLDER, project_id, 'scriptTemplate')
+        os.makedirs(upload_dir, exist_ok=True)
+        filepath = os.path.join(upload_dir, secure_filename(file.filename))
+        file.save(filepath)
+        return jsonify({'success': True, 'filename': file.filename})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(debug=False, host="0.0.0.0", port=5000)

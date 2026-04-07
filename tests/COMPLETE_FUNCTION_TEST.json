@@ -1,61 +1,61 @@
 {
-  "timestamp": "2026-04-07 17:52:08",
-  "project_id": "888f9d52-5d20-4b31-baf3-5d778f46f15b",
+  "timestamp": "2026-04-07 20:56:52",
+  "project_id": null,
   "summary": {
-    "passed": 31,
-    "failed": 0,
-    "skipped": 18,
-    "total": 49,
-    "pass_rate": "63.3%"
+    "passed": 0,
+    "failed": 6,
+    "skipped": 38,
+    "total": 44,
+    "pass_rate": "0.0%"
   },
   "by_page": {
     "系统": {
-      "PASS": 1,
-      "FAIL": 0,
+      "PASS": 0,
+      "FAIL": 1,
       "SKIP": 0
     },
     "项目管理": {
-      "PASS": 1,
-      "FAIL": 0,
+      "PASS": 0,
+      "FAIL": 1,
       "SKIP": 0
     },
     "需求分析": {
-      "PASS": 3,
-      "FAIL": 0,
-      "SKIP": 2
+      "PASS": 0,
+      "FAIL": 2,
+      "SKIP": 3
     },
     "测试策略": {
-      "PASS": 4,
-      "FAIL": 0,
-      "SKIP": 1
+      "PASS": 0,
+      "FAIL": 1,
+      "SKIP": 4
     },
     "测试设计": {
-      "PASS": 2,
-      "FAIL": 0,
-      "SKIP": 1
+      "PASS": 0,
+      "FAIL": 1,
+      "SKIP": 2
     },
     "测试用例": {
-      "PASS": 7,
+      "PASS": 0,
+      "FAIL": 0,
+      "SKIP": 9
+    },
+    "测试脚本": {
+      "PASS": 0,
+      "FAIL": 0,
+      "SKIP": 7
+    },
+    "测试日志": {
+      "PASS": 0,
+      "FAIL": 0,
+      "SKIP": 9
+    },
+    "测试评估": {
+      "PASS": 0,
       "FAIL": 0,
       "SKIP": 2
     },
-    "测试脚本": {
-      "PASS": 5,
-      "FAIL": 0,
-      "SKIP": 3
-    },
-    "测试日志": {
-      "PASS": 6,
-      "FAIL": 0,
-      "SKIP": 4
-    },
-    "测试评估": {
-      "PASS": 1,
-      "FAIL": 0,
-      "SKIP": 3
-    },
     "测试报告": {
-      "PASS": 1,
+      "PASS": 0,
       "FAIL": 0,
       "SKIP": 2
     }
@@ -64,68 +64,68 @@
     {
       "page": "系统",
       "feature": "健康检查",
-      "status": "PASS",
-      "message": "服务正常"
+      "status": "FAIL",
+      "message": "服务异常"
     },
     {
       "page": "项目管理",
       "feature": "创建项目",
-      "status": "PASS",
-      "message": "ID: 888f9d52-5d20-4b31-b..."
+      "status": "FAIL",
+      "message": "创建失败"
     },
     {
       "page": "需求分析",
       "feature": "需求文档导入",
-      "status": "PASS",
-      "message": "文件已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "需求分析",
       "feature": "AI解析需求",
       "status": "SKIP",
-      "message": "API不存在"
+      "message": "状态码: None"
     },
     {
       "page": "需求分析",
       "feature": "手动添加功能点",
-      "status": "PASS",
-      "message": "需求已添加"
+      "status": "FAIL",
+      "message": "添加失败"
     },
     {
       "page": "需求分析",
       "feature": "查询功能点列表",
-      "status": "PASS",
-      "message": "1个需求"
+      "status": "FAIL",
+      "message": "查询失败"
     },
     {
       "page": "需求分析",
       "feature": "需求审核",
       "status": "SKIP",
-      "message": "API不存在"
+      "message": "状态码: None"
     },
     {
       "page": "测试策略",
       "feature": "上传需求文档",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试策略",
       "feature": "读取需求分析结果",
-      "status": "PASS",
-      "message": "读取成功"
+      "status": "FAIL",
+      "message": "读取失败"
     },
     {
       "page": "测试策略",
       "feature": "上传系统设计",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试策略",
       "feature": "上传自定义章节",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试策略",
@@ -136,14 +136,14 @@
     {
       "page": "测试设计",
       "feature": "读取功能点列表",
-      "status": "PASS",
-      "message": "读取成功"
+      "status": "FAIL",
+      "message": "读取失败"
     },
     {
       "page": "测试设计",
       "feature": "读取测试策略",
-      "status": "PASS",
-      "message": "读取成功"
+      "status": "SKIP",
+      "message": "无策略"
     },
     {
       "page": "测试设计",
@@ -154,38 +154,38 @@
     {
       "page": "测试用例",
       "feature": "上传测试方案",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试用例",
       "feature": "上传功能点列表",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试用例",
       "feature": "上传DBC信号",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试用例",
       "feature": "上传通信矩阵",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试用例",
       "feature": "上传告警列表",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试用例",
       "feature": "上传诊断列表",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试用例",
@@ -202,48 +202,42 @@
     {
       "page": "测试用例",
       "feature": "查询用例列表",
-      "status": "PASS",
-      "message": "查询成功"
-    },
-    {
-      "page": "测试脚本",
-      "feature": "上传测试用例",
-      "status": "PASS",
-      "message": "已上传"
-    },
-    {
-      "page": "测试脚本",
-      "feature": "上传自动化接口表",
-      "status": "PASS",
-      "message": "已上传"
-    },
-    {
-      "page": "测试脚本",
-      "feature": "上传自动化规则",
-      "status": "PASS",
-      "message": "已上传"
-    },
-    {
-      "page": "测试脚本",
-      "feature": "上传DBC信号",
-      "status": "PASS",
-      "message": "已上传"
-    },
-    {
-      "page": "测试脚本",
-      "feature": "上传告警列表",
-      "status": "PASS",
-      "message": "已上传"
-    },
-    {
-      "page": "测试脚本",
-      "feature": "上传脚本模板",
       "status": "SKIP",
       "message": "API不存在"
     },
     {
       "page": "测试脚本",
-      "feature": "执行目录配置",
+      "feature": "上传测试用例",
+      "status": "SKIP",
+      "message": "API不存在"
+    },
+    {
+      "page": "测试脚本",
+      "feature": "上传自动化接口表",
+      "status": "SKIP",
+      "message": "API不存在"
+    },
+    {
+      "page": "测试脚本",
+      "feature": "上传自动化规则",
+      "status": "SKIP",
+      "message": "API不存在"
+    },
+    {
+      "page": "测试脚本",
+      "feature": "上传DBC信号",
+      "status": "SKIP",
+      "message": "API不存在"
+    },
+    {
+      "page": "测试脚本",
+      "feature": "上传告警列表",
+      "status": "SKIP",
+      "message": "API不存在"
+    },
+    {
+      "page": "测试脚本",
+      "feature": "上传脚本模板",
       "status": "SKIP",
       "message": "API不存在"
     },
@@ -256,38 +250,38 @@
     {
       "page": "测试日志",
       "feature": "BLF日志导入",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试日志",
       "feature": "ASC日志导入",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试日志",
       "feature": "CSV日志导入",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试日志",
       "feature": "MF4日志导入",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试日志",
       "feature": "DBC文件导入",
-      "status": "PASS",
-      "message": "解析成功"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试日志",
       "feature": "ARXML文件导入",
-      "status": "PASS",
-      "message": "已上传"
+      "status": "SKIP",
+      "message": "API不存在"
     },
     {
       "page": "测试日志",
@@ -308,28 +302,10 @@
       "message": "API不存在"
     },
     {
-      "page": "测试日志",
-      "feature": "导出分析",
-      "status": "SKIP",
-      "message": "API不存在"
-    },
-    {
       "page": "测试评估",
       "feature": "读取需求文件",
-      "status": "PASS",
-      "message": "读取成功"
-    },
-    {
-      "page": "测试评估",
-      "feature": "读取缺陷DTS",
       "status": "SKIP",
-      "message": "API不存在"
-    },
-    {
-      "page": "测试评估",
-      "feature": "读取执行情况",
-      "status": "SKIP",
-      "message": "API不存在"
+      "message": "无需求"
     },
     {
       "page": "测试评估",
@@ -340,12 +316,6 @@
     {
       "page": "测试报告",
       "feature": "读取报告模板",
-      "status": "PASS",
-      "message": "已上传"
-    },
-    {
-      "page": "测试报告",
-      "feature": "读取测试结果",
       "status": "SKIP",
       "message": "API不存在"
     },
