@@ -46,8 +46,9 @@ backend/data/*.json
 !backend/data/.gitkeep
 
 # Uploads
-backend/uploads/*
-!backend/uploads/.gitkeep
+# backend/uploads/*
+# !backend/uploads/.gitkeep
+# 允许上传测试数据文件
 
 # Node modules
 node_modules/

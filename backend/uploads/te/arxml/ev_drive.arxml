@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AUTOSAR xmlns="http://autosar.org/schema/r4.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_4.0.3.xsd">
+    
+    <AR-PACKAGES>
+        <AR-PACKAGE UUID="pkg-mcu-ev-drive">
+            <SHORT-NAME>MCU_EV_Drive</SHORT-NAME>
+            
+            <!-- System Package -->
+            <AR-PACKAGES>
+                <AR-PACKAGE UUID="pkg-system">
+                    <SHORT-NAME>System</SHORT-NAME>
+                    <ELEMENTS>
+                        <SYSTEM UUID="sys-ev-drive">
+                            <SHORT-NAME>EV_Drive_System</SHORT-NAME>
+                            <SYSTEM-VERSION>1.0.0</SYSTEM-VERSION>
+                            
+                            <!-- ECUs -->
+                            <ECU-INSTANCES>
+                                <ECU-INSTANCE UUID="ecu-vcu">
+                                    <SHORT-NAME>VCU</SHORT-NAME>
+                                    <CATEGORY>CONTROLLER</CATEGORY>
+                                </ECU-INSTANCE>
+                                
+                                <ECU-INSTANCE UUID="ecu-mcu">
+                                    <SHORT-NAME>MCU</SHORT-NAME>
+                                    <CATEGORY>CONTROLLER</CATEGORY>
+                                </ECU-INSTANCE>
+                                
+                                <ECU-INSTANCE UUID="ecu-bms">
+                                    <SHORT-NAME>BMS</SHORT-NAME>
+                                    <CATEGORY>CONTROLLER</CATEGORY>
+                                </ECU-INSTANCE>
+                            </ECU-INSTANCES>
+                            
+                            <!-- CAN Cluster -->
+                            <CLUSTERS>
+                                <CAN-CLUSTER UUID="cluster-can1">
+                                    <SHORT-NAME>CAN_Cluster_1</SHORT-NAME>
+                                    <BAUDRATE>500000</BAUDRATE>
+                                    <PROTOCOL>CAN</PROTOCOL>
+                                    <CAN-CLUSTER-VARIANTS>
+                                        <CAN-CLUSTER-CONDITIONAL>
+                                            <PHYSICAL-CHANNELS>
+                                                <CAN-PHYSICAL-CHANNEL UUID="ch-can1">
+                                                    <SHORT-NAME>CAN_Channel_1</SHORT-NAME>
+                                                    <CONNECTORS>
+                                                        <CAN-CONNECTOR UUID="conn-vcu">
+                                                            <SHORT-NAME>VCU_Connector</SHORT-NAME>
+                                                            <ECU-INSTANCE-REF DEST="ECU-INSTANCE">/MCU_EV_Drive/System/VCU</ECU-INSTANCE-REF>
+                                                        </CAN-CONNECTOR>
+                                                        <CAN-CONNECTOR UUID="conn-mcu">
+                                                            <SHORT-NAME>MCU_Connector</SHORT-NAME>
+                                                            <ECU-INSTANCE-REF DEST="ECU-INSTANCE">/MCU_EV_Drive/System/MCU</ECU-INSTANCE-REF>
+                                                        </CAN-CONNECTOR>
+                                                    </CONNECTORS>
+                                                </CAN-PHYSICAL-CHANNEL>
+                                            </PHYSICAL-CHANNELS>
+                                        </CAN-CLUSTER-CONDITIONAL>
+                                    </CAN-CLUSTER-VARIANTS>
+                                </CAN-CLUSTER>
+                            </CLUSTERS>
+                        </SYSTEM>
+                    </ELEMENTS>
+                </AR-PACKAGE>
+                
+                <!-- Communication Package -->
+                <AR-PACKAGE UUID="pkg-comm">
+                    <SHORT-NAME>Communication</SHORT-NAME>
+                    
+                    <!-- CAN Frame Definitions -->
+                    <ELEMENTS>
+                        <CAN-FRAME UUID="frame-torque-cmd">
+                            <SHORT-NAME>VCU_TorqueCmd</SHORT-NAME>
+                            <FRAME-LENGTH>8</FRAME-LENGTH>
+                            <PDU-REFS>
+                                <PDU-REF DEST="PDU">/MCU_EV_Drive/Communication/PDU_TorqueCmd</PDU-REF>
+                            </PDU-REFS>
+                        </CAN-FRAME>
+                        
+                        <CAN-FRAME UUID="frame-speed-cmd">
+                            <SHORT-NAME>VCU_SpeedCmd</SHORT-NAME>
+                            <FRAME-LENGTH>8</FRAME-LENGTH>
+                            <PDU-REFS>
+                                <PDU-REF DEST="PDU">/MCU_EV_Drive/Communication/PDU_SpeedCmd</PDU-REF>
+                            </PDU-REFS>
+                        </CAN-FRAME>
+                        
+                        <CAN-FRAME UUID="frame-torque-fb">
+                            <SHORT-NAME>MCU_TorqueFb</SHORT-NAME>
+                            <FRAME-LENGTH>8</FRAME-LENGTH>
+                            <PDU-REFS>
+                                <PDU-REF DEST="PDU">/MCU_EV_Drive/Communication/PDU_TorqueFb</PDU-REF>
+                            </PDU-REFS>
+                        </CAN-FRAME>
+                        
+                        <CAN-FRAME UUID="frame-speed-fb">
+                            <SHORT-NAME>MCU_SpeedFb</SHORT-NAME>
+                            <FRAME-LENGTH>8</FRAME-LENGTH>
+                            <PDU-REFS>
+                                <PDU-REF DEST="PDU">/MCU_EV_Drive/Communication/PDU_SpeedFb</PDU-REF>
+                            </PDU-REFS>
+                        </CAN-FRAME>
+                    </ELEMENTS>
+                </AR-PACKAGE>
+                
+                <!-- Signal Package -->
+                <AR-PACKAGE UUID="pkg-signal">
+                    <SHORT-NAME>Signals</SHORT-NAME>
+                    <ELEMENTS>
+                        <SYSTEM-SIGNAL UUID="sig-torque-req">
+                            <SHORT-NAME>Torque_Request</SHORT-NAME>
+                            <LENGTH>16</LENGTH>
+                            <SYSTEM-SIGNAL-GROUPS>
+                                <SYSTEM-SIGNAL-GROUP>
+                                    <TYPE>SIGNED</TYPE>
+                                    <UNIT>Nm</UNIT>
+                                    <FACTOR>0.1</FACTOR>
+                                    <OFFSET>-3276.8</OFFSET>
+                                    <MIN>-3276.8</MIN>
+                                    <MAX>3276.7</MAX>
+                                </SYSTEM-SIGNAL-GROUP>
+                            </SYSTEM-SIGNAL-GROUPS>
+                        </SYSTEM-SIGNAL>
+                        
+                        <SYSTEM-SIGNAL UUID="sig-speed-req">
+                            <SHORT-NAME>Speed_Request</SHORT-NAME>
+                            <LENGTH>16</LENGTH>
+                            <SYSTEM-SIGNAL-GROUPS>
+                                <SYSTEM-SIGNAL-GROUP>
+                                    <TYPE>UNSIGNED</TYPE>
+                                    <UNIT>rpm</UNIT>
+                                    <FACTOR>1</FACTOR>
+                                    <OFFSET>0</OFFSET>
+                                    <MIN>0</MIN>
+                                    <MAX>15000</MAX>
+                                </SYSTEM-SIGNAL-GROUP>
+                            </SYSTEM-SIGNAL-GROUPS>
+                        </SYSTEM-SIGNAL>
+                        
+                        <SYSTEM-SIGNAL UUID="sig-torque-actual">
+                            <SHORT-NAME>Torque_Actual</SHORT-NAME>
+                            <LENGTH>16</LENGTH>
+                            <SYSTEM-SIGNAL-GROUPS>
+                                <SYSTEM-SIGNAL-GROUP>
+                                    <TYPE>SIGNED</TYPE>
+                                    <UNIT>Nm</UNIT>
+                                    <FACTOR>0.1</FACTOR>
+                                    <OFFSET>-3276.8</OFFSET>
+                                    <MIN>-3276.8</MIN>
+                                    <MAX>3276.7</MAX>
+                                </SYSTEM-SIGNAL-GROUP>
+                            </SYSTEM-SIGNAL-GROUPS>
+                        </SYSTEM-SIGNAL>
+                        
+                        <SYSTEM-SIGNAL UUID="sig-speed-actual">
+                            <SHORT-NAME>Speed_Actual</SHORT-NAME>
+                            <LENGTH>16</LENGTH>
+                            <SYSTEM-SIGNAL-GROUPS>
+                                <SYSTEM-SIGNAL-GROUP>
+                                    <TYPE>UNSIGNED</TYPE>
+                                    <UNIT>rpm</UNIT>
+                                    <FACTOR>1</FACTOR>
+                                    <OFFSET>0</OFFSET>
+                                    <MIN>0</MIN>
+                                    <MAX>15000</MAX>
+                                </SYSTEM-SIGNAL-GROUP>
+                            </SYSTEM-SIGNAL-GROUPS>
+                        </SYSTEM-SIGNAL>
+                        
+                        <SYSTEM-SIGNAL UUID="sig-igbt-temp">
+                            <SHORT-NAME>IGBT_Temp</SHORT-NAME>
+                            <LENGTH>8</LENGTH>
+                            <SYSTEM-SIGNAL-GROUPS>
+                                <SYSTEM-SIGNAL-GROUP>
+                                    <TYPE>UNSIGNED</TYPE>
+                                    <UNIT>C</UNIT>
+                                    <FACTOR>1</FACTOR>
+                                    <OFFSET>-40</OFFSET>
+                                    <MIN>-40</MIN>
+                                    <MAX>215</MAX>
+                                </SYSTEM-SIGNAL-GROUP>
+                            </SYSTEM-SIGNAL-GROUPS>
+                        </SYSTEM-SIGNAL>
+                        
+                        <SYSTEM-SIGNAL UUID="sig-motor-temp">
+                            <SHORT-NAME>Motor_Temp</SHORT-NAME>
+                            <LENGTH>8</LENGTH>
+                            <SYSTEM-SIGNAL-GROUPS>
+                                <SYSTEM-SIGNAL-GROUP>
+                                    <TYPE>UNSIGNED</TYPE>
+                                    <UNIT>C</UNIT>
+                                    <FACTOR>1</FACTOR>
+                                    <OFFSET>-40</OFFSET>
+                                    <MIN>-40</MIN>
+                                    <MAX>215</MAX>
+                                </SYSTEM-SIGNAL-GROUP>
+                            </SYSTEM-SIGNAL-GROUPS>
+                        </SYSTEM-SIGNAL>
+                        
+                        <SYSTEM-SIGNAL UUID="sig-hv-voltage">
+                            <SHORT-NAME>HV_Voltage</SHORT-NAME>
+                            <LENGTH>16</LENGTH>
+                            <SYSTEM-SIGNAL-GROUPS>
+                                <SYSTEM-SIGNAL-GROUP>
+                                    <TYPE>UNSIGNED</TYPE>
+                                    <UNIT>V</UNIT>
+                                    <FACTOR>0.1</FACTOR>
+                                    <OFFSET>0</OFFSET>
+                                    <MIN>0</MIN>
+                                    <MAX>6553.5</MAX>
+                                </SYSTEM-SIGNAL-GROUP>
+                            </SYSTEM-SIGNAL-GROUPS>
+                        </SYSTEM-SIGNAL>
+                        
+                        <SYSTEM-SIGNAL UUID="sig-hv-current">
+                            <SHORT-NAME>HV_Current</SHORT-NAME>
+                            <LENGTH>16</LENGTH>
+                            <SYSTEM-SIGNAL-GROUPS>
+                                <SYSTEM-SIGNAL-GROUP>
+                                    <TYPE>SIGNED</TYPE>
+                                    <UNIT>A</UNIT>
+                                    <FACTOR>0.1</FACTOR>
+                                    <OFFSET>-3276.8</OFFSET>
+                                    <MIN>-3276.8</MIN>
+                                    <MAX>3276.7</MAX>
+                                </SYSTEM-SIGNAL-GROUP>
+                            </SYSTEM-SIGNAL-GROUPS>
+                        </SYSTEM-SIGNAL>
+                    </ELEMENTS>
+                </AR-PACKAGE>
+                
+                <!-- Software Components -->
+                <AR-PACKAGE UUID="pkg-swcomponents">
+                    <SHORT-NAME>SoftwareComponents</SHORT-NAME>
+                    <ELEMENTS>
+                        <SWC-MCU-CONTROL UUID="swc-mcu-control">
+                            <SHORT-NAME>MCU_Control_Swc</SHORT-NAME>
+                            <CATEGORY>APPLICATION</CATEGORY>
+                            <PORTS>
+                                <R-PORT UUID="port-torque-req">
+                                    <SHORT-NAME>TorqueRequest_RPort</SHORT-NAME>
+                                    <PROVIDED-INTERFACE-REF>/MCU_EV_Drive/Interfaces/TorqueInterface</PROVIDED-INTERFACE-REF>
+                                </R-PORT>
+                                <P-PORT UUID="port-torque-fb">
+                                    <SHORT-NAME>TorqueFeedback_PPort</SHORT-NAME>
+                                    <PROVIDED-INTERFACE-REF>/MCU_EV_Drive/Interfaces/TorqueInterface</PROVIDED-INTERFACE-REF>
+                                </P-PORT>
+                            </PORTS>
+                        </SWC-MCU-CONTROL>
+                    </ELEMENTS>
+                </AR-PACKAGE>
+            </AR-PACKAGES>
+        </AR-PACKAGE>
+    </AR-PACKAGES>
+</AUTOSAR>
