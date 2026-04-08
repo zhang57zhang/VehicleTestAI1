@@ -424,9 +424,9 @@ class VehicleTestAIApp {
             
             if (result.success) {
                 this.currentProject = {
-                    id: result.project_id,
+                    id: result.project.id,
                     name: name,
-                    path: result.path,
+                    path: result.project.id,
                     createdAt: new Date().toISOString(),
                     files: {
                         requirement: {},
