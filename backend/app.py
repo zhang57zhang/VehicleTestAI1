@@ -34,8 +34,11 @@ app = Flask(__name__)
 CORS(app)
 
 # ===== AI 服务配置 =====
-ZHIPUAI_API_KEY = os.environ.get("ZHIPUAI_API_KEY")
-ZHIPUAI_MODEL = os.environ.get("ZHIPUAI_MODEL", "glm-4.7")
+# 支持两种环境变量名称：GLM_API_KEY 或 ZHIPUAI_API_KEY
+ZHIPUAI_API_KEY = os.environ.get("GLM_API_KEY") or os.environ.get("ZHIPUAI_API_KEY")
+ZHIPUAI_MODEL = os.environ.get("GLM_MODEL") or os.environ.get(
+    "ZHIPUAI_MODEL", "glm-4.7"
+)
 
 
 def get_configured_ai_service():
