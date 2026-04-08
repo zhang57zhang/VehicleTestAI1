@@ -108,9 +108,29 @@ def ai_chat():
     try:
         data = request.json
         message = data.get("message", "")
+        history = data.get("history", [])
 
-        # Mock响应
-        response = f"收到您的问题：{message}\n\n作为AI测试助手，我可以帮助您进行测试相关的工作。请告诉我您需要什么帮助？"
+        # 获取AI服务
+        ai_service = get_configured_ai_service()
+
+        # 构建提示词
+        system_prompt = "你是一个专业的车载控制器测试AI助手。你可以帮助工程师进行需求分析、测试策略制定、测试用例设计、测试脚本生成、日志分析和测试报告生成。请根据用户的问题提供专业、准确的回答，用中文回答。"
+
+        # 构建完整提示
+        full_prompt = f"{system_prompt}\n\n"
+
+        # 添加历史对话
+        if history:
+            for h in history:
+                role = "用户" if h.get("role") == "user" else "助手"
+                full_prompt += f"{role}: {h.get('content', '')}\n"
+            full_prompt += "\n"
+
+        # 添加当前问题
+        full_prompt += f"用户: {message}\n\n请回答："
+
+        # 调用AI服务
+        response = ai_service.generate(full_prompt)
 
         return jsonify(
             {
@@ -120,6 +140,7 @@ def ai_chat():
             }
         )
     except Exception as e:
+        print(f"AI Chat Error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
