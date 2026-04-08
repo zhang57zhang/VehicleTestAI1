@@ -849,6 +849,20 @@ def parse_requirements():
         data = request.json
         project_id = data.get("project_id")
         content = data.get("content", "")
+        file_id = data.get("file_id")
+
+        # 如果提供了文件ID，读取文件内容
+        if file_id and project_id:
+            # 查找项目上传目录中的需求文件
+            req_dir = os.path.join(UPLOAD_FOLDER, project_id, "requirement")
+            if os.path.exists(req_dir):
+                files = os.listdir(req_dir)
+                if files:
+                    # 读取第一个文件
+                    file_path = os.path.join(req_dir, files[0])
+                    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                        content = f.read()
+                    print(f"📄 读取需求文件: {file_path}, 大小: {len(content)} 字符")
 
         # 如果提供了文档内容，直接解析
         if content:
