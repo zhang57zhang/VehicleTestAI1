@@ -15,14 +15,12 @@ if errorlevel 1 (
 echo [INFO] Checking configuration...
 if not exist backend\.env (
     echo [WARN] backend\.env not found, creating default...
-    echo GLM_API_KEY=your_api_key_here > backend\.env
+    echo GLM_API_KEY=9397e0ee877d49e38ba9df70f892ccbc.gKfekOqkn9Sz1rvG > backend\.env
     echo GLM_MODEL=glm-4.7 >> backend\.env
 )
 
 echo [INFO] Starting Backend Server (Port 5000)...
-cd backend
-start "VehicleTestAI Backend" cmd /k python app.py
-cd ..
+start "VehicleTestAI Backend" cmd /k "cd /d %~dp0backend && python app.py"
 
 REM Wait for backend to start
 timeout /t 5 /nobreak >nul
@@ -34,7 +32,7 @@ if errorlevel 1 (
 )
 
 echo [INFO] Starting Frontend Server (Port 8080)...
-start "VehicleTestAI Frontend" cmd /k python -m http.server 8080
+start "VehicleTestAI Frontend" cmd /k "cd /d %~dp0 && python -m http.server 8080"
 
 echo.
 echo ========================================

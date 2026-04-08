@@ -6,7 +6,7 @@
 // ==================== API配置 ====================
 
 const API_CONFIG = {
-    // 后端API地址 - 根据部署环境调整
+    // 后端API地址 - 使用完整URL
     BASE_URL: 'http://localhost:5000/api',
 
     // API端点
@@ -26,7 +26,7 @@ const API_CONFIG = {
         AI_PARSE_LOG: '/ai/parse-log',
         AI_GENERATE_EVALUATION: '/ai/generate-evaluation',
         AI_GENERATE_REPORT: '/ai/generate-report',
-        AI_ANALYZE_REQUIREMENTS: '/ai/analyze-requirements',
+        AI_ANALYZE_REQUIREMENTS: '/ai/parse-requirements',
         AI_REVIEW_REPORT: '/ai/review-report',
         AI_OPTIMIZE_SCRIPT: '/ai/optimize-script',
 

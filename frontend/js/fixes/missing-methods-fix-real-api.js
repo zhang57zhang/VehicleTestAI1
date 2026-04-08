@@ -34,7 +34,7 @@
                 formData.append('file', file);
                 
                 const projectId = app.currentProject?.id || 'default-project';
-                const endpoint = `/api/upload/${projectId}/${type}`;
+const endpoint = `http://localhost:5000/api/upload/${projectId}/${type}`;
                 
                 const response = await fetch(endpoint, {
                     method: 'POST',
@@ -80,7 +80,7 @@
                 return;
             }
             
-            const response = await fetch(`/api/requirements/${app.currentProject.id}`);
+            const response = await fetch(`http://localhost:5000/api/requirements/${app.currentProject.id}`);
             const result = await response.json();
             
             if (result.success) {
@@ -117,7 +117,7 @@
         try {
             app.showToast('🤖 AI 正在解析需求...', 'info');
             
-            const response = await fetch('/api/ai/parse-requirements', {
+            const response = await fetch('http://localhost:5000/api/ai/parse-requirements', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -153,7 +153,7 @@
         }
         
         try {
-            const response = await fetch('/api/requirements', {
+            const response = await fetch('http://localhost:5000/api/requirements', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -209,7 +209,7 @@
         console.log('🗑️ Delete requirement:', id);
         
         try {
-            const response = await fetch(`/api/requirements/${id}`, {
+            const response = await fetch(`http://localhost:5000/api/requirements/${id}`, {
                 method: 'DELETE'
             });
             
@@ -240,7 +240,7 @@
         try {
             app.showToast('✅ 需求审核中...', 'info');
             
-            const response = await fetch('/api/ai/review-requirements', {
+            const response = await fetch('http://localhost:5000/api/ai/review-requirements', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -279,7 +279,7 @@
         try {
             app.showToast('🎯 正在生成测试策略...', 'info');
             
-            const response = await fetch('/api/ai/generate-strategy', {
+            const response = await fetch('http://localhost:5000/api/ai/generate-strategy', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -313,7 +313,7 @@
                 return;
             }
             
-            const response = await fetch(`/api/strategies/${app.currentProject.id}/latest`);
+            const response = await fetch(`http://localhost:5000/api/strategies/${app.currentProject.id}/latest`);
             const result = await response.json();
             
             if (result.success) {
@@ -345,7 +345,7 @@
                 return;
             }
             
-            const response = await fetch(`/api/requirements/${app.currentProject.id}`);
+            const response = await fetch(`http://localhost:5000/api/requirements/${app.currentProject.id}`);
             const result = await response.json();
             
             if (result.success) {
@@ -374,7 +374,7 @@
             
             app.showToast('🎨 正在生成测试设计...', 'info');
             
-            const response = await fetch('/api/ai/generate-design', {
+            const response = await fetch('http://localhost:5000/api/ai/generate-design', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -407,7 +407,7 @@
         console.log('👁️ View design:', id);
         
         try {
-            const response = await fetch(`/api/designs/${id}`);
+            const response = await fetch(`http://localhost:5000/api/designs/${id}`);
             const result = await response.json();
             
             if (result.success) {
@@ -431,7 +431,7 @@
         console.log('📥 Export design:', id);
         
         try {
-            const response = await fetch(`/api/designs/${id}`);
+            const response = await fetch(`http://localhost:5000/api/designs/${id}`);
             const result = await response.json();
             
             if (result.success) {
@@ -485,7 +485,7 @@
         try {
             app.showToast('🔍 正在分析日志...', 'info');
             
-            const response = await fetch('/api/ai/analyze-logs', {
+            const response = await fetch('http://localhost:5000/api/ai/analyze-logs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

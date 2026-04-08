@@ -278,14 +278,20 @@ class VehicleTestAIApp {
             
             // Upload to backend
             try {
-                await this.uploadFileToBackend(type, file, content);
+                const result = await this.uploadFileToBackend(type, file, content);
+                if (result.success) {
+                    this.showToast('文件上传成功', 'success');
+                } else {
+                    this.showToast('上传失败: ' + (result.error || '未知错误'), 'error');
+                }
                 
                 // Special handling for DBC files - parse immediately
                 if (type === 'dbcFile' && file.name.endsWith('.dbc')) {
                     await this.parseDBCAfterUpload(file.name, content);
                 }
             } catch (error) {
-                console.warn('File upload to backend failed:', error);
+                console.error('File upload to backend failed:', error);
+                this.showToast('上传失败: ' + error.message, 'error');
             }
             
             this.renderProjectTree();
@@ -356,6 +362,11 @@ class VehicleTestAIApp {
             method: 'POST',
             body: formData
         });
+        
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(`HTTP ${response.status}: ${text.substring(0, 100)}`);
+        }
         
         return await response.json();
     }
