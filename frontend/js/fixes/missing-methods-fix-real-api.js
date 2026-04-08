@@ -55,7 +55,7 @@ const endpoint = `http://localhost:5000/api/upload/${projectId}/${type}`;
                     
                     // 刷新页面
                     if (app.activeTab === 'requirements') {
-                        await app.loadRequirements();
+                        app.renderPage('requirements');
                     }
                 } else {
                     throw new Error(result.error || 'Upload failed');
