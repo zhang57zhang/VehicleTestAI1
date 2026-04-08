@@ -99,6 +99,30 @@ def get_ai_config():
     )
 
 
+@app.route("/api/ai/chat", methods=["POST", "OPTIONS"])
+def ai_chat():
+    """AI助手对话"""
+    if request.method == "OPTIONS":
+        return jsonify({}), 200
+
+    try:
+        data = request.json
+        message = data.get("message", "")
+
+        # Mock响应
+        response = f"收到您的问题：{message}\n\n作为AI测试助手，我可以帮助您进行测试相关的工作。请告诉我您需要什么帮助？"
+
+        return jsonify(
+            {
+                "success": True,
+                "response": response,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 # 确保目录存在
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs("data", exist_ok=True)
