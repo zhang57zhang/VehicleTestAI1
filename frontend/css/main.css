@@ -261,7 +261,7 @@ body {
 .ai-chat {
     display: flex;
     flex-direction: column;
-    height: 280px;
+    flex: 1;
     border: 1px solid var(--border);
     border-radius: 10px;
     overflow: hidden;
@@ -308,14 +308,18 @@ body {
     padding: 10px;
     border-top: 1px solid var(--border);
     gap: 6px;
+    align-items: flex-end;
 }
 
-.ai-chat-input input {
+.ai-chat-input textarea {
     flex: 1;
     padding: 8px 10px;
     border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 12px;
+    resize: none;
+    min-height: 80px;
+    font-family: inherit;
 }
 
 /* AI助手最小化图标 */

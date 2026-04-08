@@ -45,13 +45,13 @@
                     <span class="sidebar-title"><i class="fas fa-robot" style="color: var(--primary);"></i>AI助手</span>
                     <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="app.toggleAISidebar()"><i class="fas fa-minus" id="aiToggleIcon"></i></button>
                 </div>
-                <div class="ai-chat" id="aiChatContainer" style="height: 250px;">
+                <div class="ai-chat" id="aiChatContainer">
                     <div class="ai-chat-messages" id="aiMessages">
                         <div class="ai-message assistant">您好！我是AI测试助手，支持需求分析、策略生成、用例设计、脚本生成等功能。请选择具体功能模块开始。</div>
                     </div>
                     <div class="ai-chat-input">
-                        <input type="text" placeholder="输入问题..." id="aiInput" onkeypress="if(event.key==='Enter')app.sendAIMessage()">
-                        <button class="btn btn-primary" style="padding: 8px 10px;" onclick="app.sendAIMessage()"><i class="fas fa-paper-plane"></i></button>
+                        <textarea placeholder="输入问题..." id="aiInput" rows="4" style="flex:1; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; resize:none;" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();app.sendAIMessage()}"></textarea>
+                        <button class="btn btn-primary" style="padding: 8px 10px; align-self: flex-end;" onclick="app.sendAIMessage()"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 </div>
             </aside>
