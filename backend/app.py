@@ -193,6 +193,39 @@ def delete_project(project_id):
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route("/api/projects/<project_id>/sync", methods=["POST"])
+def sync_project(project_id):
+    """同步项目文件"""
+    try:
+        project = Project.query.get(project_id)
+        if not project:
+            return jsonify({"success": False, "error": "Project not found"}), 404
+
+        # 获取项目上传目录中的文件
+        upload_dir = os.path.join(UPLOAD_FOLDER, project_id)
+        files = {}
+
+        if os.path.exists(upload_dir):
+            for folder in os.listdir(upload_dir):
+                folder_path = os.path.join(upload_dir, folder)
+                if os.path.isdir(folder_path):
+                    files[folder] = []
+                    for f in os.listdir(folder_path):
+                        file_path = os.path.join(folder_path, f)
+                        if os.path.isfile(file_path):
+                            files[folder].append(
+                                {
+                                    "name": f,
+                                    "path": file_path,
+                                    "size": os.path.getsize(file_path),
+                                }
+                            )
+
+        return jsonify({"success": True, "files": files, "project": project.to_dict()})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 # ===== 需求管理 API =====
 
 
