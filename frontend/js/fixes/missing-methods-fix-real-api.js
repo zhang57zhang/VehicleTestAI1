@@ -129,8 +129,10 @@ const endpoint = `http://localhost:5000/api/upload/${projectId}/${type}`;
             const result = await response.json();
             
             if (result.success) {
-                app.projectData.requirements = result.requirements;
-                app.showToast(`✅ AI 解析完成，识别出 ${result.requirements.length} 个功能点`, 'success');
+                // 后端返回 analysis 对象，包含 functional_requirements
+                const requirements = result.analysis?.functional_requirements || [];
+                app.projectData.requirements = requirements;
+                app.showToast(`✅ AI 解析完成，识别出 ${requirements.length} 个功能点`, 'success');
                 
                 if (app.activeTab === 'requirements') {
                     app.renderPage('requirements');
