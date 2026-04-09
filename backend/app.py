@@ -185,6 +185,23 @@ def create_project():
         db.session.add(project)
         db.session.commit()
 
+        # 创建项目目录结构
+        project_dir = os.path.join(UPLOAD_FOLDER, project_id)
+        subdirs = [
+            "requirement",
+            "strategy",
+            "design",
+            "testcase",
+            "script",
+            "log",
+            "evaluation",
+            "report",
+            "resource",
+        ]
+        for subdir in subdirs:
+            os.makedirs(os.path.join(project_dir, subdir), exist_ok=True)
+        print(f"📁 创建项目目录: {project_dir}")
+
         return jsonify({"success": True, "project": project.to_dict()}), 201
     except Exception as e:
         db.session.rollback()
@@ -311,6 +328,45 @@ def create_requirement():
         db.session.commit()
 
         return jsonify({"success": True, "requirement": requirement.to_dict()}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/requirements/<req_id>", methods=["DELETE"])
+def delete_requirement(req_id):
+    """删除需求"""
+    try:
+        requirement = Requirement.query.get(req_id)
+        if not requirement:
+            return jsonify({"success": False, "error": "Requirement not found"}), 404
+
+        db.session.delete(requirement)
+        db.session.commit()
+
+        return jsonify({"success": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/requirements/<req_id>", methods=["PUT"])
+def update_requirement(req_id):
+    """更新需求"""
+    try:
+        requirement = Requirement.query.get(req_id)
+        if not requirement:
+            return jsonify({"success": False, "error": "Requirement not found"}), 404
+
+        data = request.json
+        requirement.name = data.get("name", requirement.name)
+        requirement.description = data.get("description", requirement.description)
+        requirement.category = data.get("category", requirement.category)
+        requirement.priority = data.get("priority", requirement.priority)
+
+        db.session.commit()
+
+        return jsonify({"success": True, "requirement": requirement.to_dict()})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
@@ -896,6 +952,10 @@ def parse_requirements():
                 if json_match:
                     parsed = json.loads(json_match.group())
                     if "functional_requirements" in parsed:
+                        # 为每个功能点添加ID
+                        for i, req in enumerate(parsed["functional_requirements"]):
+                            if "id" not in req:
+                                req["id"] = f"FP_{i + 1:03d}"
                         analysis = parsed
             except Exception as e:
                 print(f"JSON parse error: {e}")
