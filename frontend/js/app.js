@@ -445,7 +445,7 @@ class VehicleTestAIApp {
                 UIUtils.updateProjectTitle(name);
                 UIUtils.updateStatusProject(name);
                 this.renderProjectTree();
-                this.showToast(`项目"${name}"创建成功\n路径: ${result.path}`, 'success');
+                this.showToast(`项目"${name}"创建成功\n路径: uploads/${result.project.id}`, 'success');
             } else {
                 this.showToast('创建项目失败: ' + (result.error || '未知错误'), 'error');
             }
