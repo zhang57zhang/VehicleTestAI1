@@ -1,4 +1,7 @@
+"""AI 路由：提供对话与自动化生成功能的 API。中文文档化，便于维护。"""
 from flask import Blueprint, request, jsonify
+import os
+import json
 
 # 注意: 该模块依赖服务层的 AI 实现，尽量复用已有服务逻辑
 from models import db, Project, Requirement, TestStrategy, TestDesign, TestCase, TestLog
@@ -7,10 +10,16 @@ from datetime import datetime
 
 ai_bp = Blueprint("ai_routes", __name__)
 
+# 上传文件夹路径
+UPLOAD_FOLDER = "uploads"
+
 
 @ai_bp.route("/api/ai/config", methods=["GET"])
 def get_ai_config():
-    """获取AI配置信息"""
+    """获取AI配置信息
+
+    返回当前 AI 提供商、模型以及可用性信息，供前端展示或决定后续使用的 AI 服务。
+    """
     # 演示性实现，与原实现等价
     ZHIPUAI_API_KEY = __import__("os").environ.get("GLM_API_KEY") or __import__(
         "os"
@@ -32,7 +41,12 @@ def get_ai_config():
 
 @ai_bp.route("/api/ai/chat", methods=["POST"])
 def ai_chat():
-    """AI助手对话"""
+    """AI 助手对话
+
+    接收用户消息和历史对话记录，拼接成系统提示后调用 AI 服务，返回生成的回复文本。
+    参数：message 为当前用户消息，history 为对话历史。
+    返回：包含 AI 回复文本及时间戳的 JSON。
+    """
     try:
         data = request.json
         message = data.get("message", "")
@@ -62,6 +76,12 @@ def ai_chat():
 
 @ai_bp.route("/api/ai/generate-strategy", methods=["POST"])
 def generate_strategy():
+    """生成测试策略
+
+    通过 AI 根据项目需求生成测试策略文本，存储到数据库并返回策略对象。
+    参数：project_id, (可选) requirements
+    返回：包含新生成策略信息的 JSON。
+    """
     try:
         data = request.json
         project_id = data.get("project_id")
@@ -86,6 +106,20 @@ def generate_strategy():
         )
         db.session.add(strategy)
         db.session.commit()
+        
+        # 保存到文件
+        if project_id:
+            strategy_dir = os.path.join(UPLOAD_FOLDER, project_id, "strategy")
+            os.makedirs(strategy_dir, exist_ok=True)
+            strategy_file = os.path.join(strategy_dir, f"strategy_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md")
+            with open(strategy_file, "w", encoding="utf-8") as f:
+                f.write(f"# 测试策略\n\n")
+                f.write(f"**生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                f.write(f"**项目ID**: {project_id}\n\n")
+                f.write("---\n\n")
+                f.write(content)
+            print(f"📄 测试策略已保存到: {strategy_file}")
+        
         return jsonify({"success": True, "strategy": strategy.to_dict()})
     except Exception as e:
         db.session.rollback()
@@ -94,6 +128,12 @@ def generate_strategy():
 
 @ai_bp.route("/api/ai/generate-design", methods=["POST"])
 def generate_design():
+    """生成测试设计
+
+    将现有的测试策略内容汇总后交由 AI 生成测试设计文本，保存在数据库并返回。
+    参数：project_id
+    返回：新生成的测试设计对象
+    """
     try:
         data = request.json
         project_id = data.get("project_id")
@@ -111,6 +151,20 @@ def generate_design():
         )
         db.session.add(design)
         db.session.commit()
+        
+        # 保存到文件
+        if project_id:
+            design_dir = os.path.join(UPLOAD_FOLDER, project_id, "design")
+            os.makedirs(design_dir, exist_ok=True)
+            design_file = os.path.join(design_dir, f"design_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md")
+            with open(design_file, "w", encoding="utf-8") as f:
+                f.write(f"# 测试设计\n\n")
+                f.write(f"**生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                f.write(f"**项目ID**: {project_id}\n\n")
+                f.write("---\n\n")
+                f.write(content)
+            print(f"📄 测试设计已保存到: {design_file}")
+        
         return jsonify({"success": True, "design": design.to_dict()})
     except Exception as e:
         db.session.rollback()
@@ -119,6 +173,12 @@ def generate_design():
 
 @ai_bp.route("/api/ai/generate-testcases", methods=["POST"])
 def generate_testcases():
+    """生成测试用例
+
+    根据设计内容创建详细的测试用例文本，并持久化到数据库。
+    参数：project_id、design（可选）
+    返回：新生成的测试用例对象信息
+    """
     try:
         data = request.json
         project_id = data.get("project_id")
@@ -160,6 +220,12 @@ def generate_testcases():
 
 @ai_bp.route("/api/ai/generate-scripts", methods=["POST"])
 def generate_scripts():
+    """生成测试脚本
+
+    将测试用例文本转换为可执行的 Python 脚本，常用于 pytest 框架。
+    参数：project_id、testcases（可选）
+    返回：生成的脚本内容及元信息
+    """
     try:
         data = request.json
         project_id = data.get("project_id")
@@ -186,6 +252,12 @@ def generate_scripts():
 
 @ai_bp.route("/api/ai/parse-log", methods=["POST"])
 def parse_log():
+    """解析测试日志
+
+    将提供的日志内容提交给 AI 服务进行分析，结果保存到日志表并返回分析摘要与完整结果。
+    参数：project_id、log_content
+    返回：分析摘要与完整结果
+    """
     try:
         data = request.json
         project_id = data.get("project_id")
@@ -223,6 +295,12 @@ def parse_log():
 
 @ai_bp.route("/api/ai/generate-report", methods=["POST"])
 def generate_report():
+    """生成测试报告
+
+    基于当前项目的需求、策略、设计、用例和日志等信息，调用 AI 生成完整的 Markdown 格式报告。
+    参数：project_id
+    返回：生成的报告文本及元数据
+    """
     try:
         data = request.json
         project_id = data.get("project_id")
@@ -265,6 +343,12 @@ def generate_report():
 
 @ai_bp.route("/api/ai/parse-requirements", methods=["POST"])
 def parse_requirements():
+    """分析需求文本
+
+    将需求文本交给 AI 进行分析，并返回分析结果。
+    参数：project_id、content（可选）
+    返回：分析结果文本
+    """
     try:
         data = request.json
         project_id = data.get("project_id")
@@ -284,6 +368,12 @@ def parse_requirements():
 
 @ai_bp.route("/api/ai/review-requirements", methods=["POST"])
 def review_requirements():
+    """审核需求
+
+    对指定项目的需求进行审核与评分，返回审核内容与分数。
+    参数：project_id
+    返回：审核结果
+    """
     try:
         data = request.json
         project_id = data.get("project_id")
@@ -300,6 +390,12 @@ def review_requirements():
 
 @ai_bp.route("/api/ai/generate-evaluation", methods=["POST"])
 def generate_evaluation():
+    """生成测试评估
+
+    调用 AI 生成针对当前项目的测试评估文本。
+    参数：project_id
+    返回：评估文本
+    """
     try:
         data = request.json
         project_id = data.get("project_id")
@@ -312,6 +408,12 @@ def generate_evaluation():
 
 @ai_bp.route("/api/ai/generate-dts", methods=["POST"])
 def generate_dts():
+    """生成缺陷跟踪表 (DTS)
+
+    调用 AI 生成一个缺陷跟踪表的文本表示。
+    参数：project_id
+    返回：DTS 文本内容
+    """
     try:
         data = request.json
         project_id = data.get("project_id")
