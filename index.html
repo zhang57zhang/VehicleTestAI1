@@ -744,7 +744,13 @@ class TorqueRequestTest:
     <script src="frontend/js/utils/error-handler.js"></script>
     <script src="frontend/js/utils/performance-utils.js"></script>
     <script src="frontend/js/app.js"></script>
-    <!-- 修复缺失的按钮功能 - Real API Version -->
-    <script src="frontend/js/fixes/missing-methods-fix-real-api.js"></script>
+
+    <!-- Modular glue for real API and refactor -->
+    <script src="frontend/js/core/app-core.js"></script>
+    <script src="frontend/js/core/project-manager.js"></script>
+    <script src="frontend/js/core/file-manager.js"></script>
+    <script src="frontend/js/core/page-renderer.js"></script>
+    <script src="frontend/js/core/ai-integration.js"></script>
+    <script src="frontend/js/core/missing-methods-real-api-merge.js"></script>
 </body>
 </html>
