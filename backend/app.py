@@ -957,6 +957,42 @@ def parse_requirements():
                             if "id" not in req:
                                 req["id"] = f"FP_{i + 1:03d}"
                         analysis = parsed
+
+                        # 保存功能点到数据库和文件
+                        if project_id:
+                            for req_data in parsed["functional_requirements"]:
+                                existing = Requirement.query.filter_by(
+                                    project_id=project_id, name=req_data.get("name")
+                                ).first()
+                                if not existing:
+                                    requirement = Requirement(
+                                        id=str(uuid.uuid4()),
+                                        project_id=project_id,
+                                        name=req_data.get("name", "未命名"),
+                                        description=req_data.get("description", ""),
+                                        category=req_data.get("category", "未分类"),
+                                        priority=req_data.get("priority", "P2"),
+                                        source="AI解析",
+                                    )
+                                    db.session.add(requirement)
+                            db.session.commit()
+
+                            # 保存到文件
+                            req_file_dir = os.path.join(
+                                UPLOAD_FOLDER, project_id, "requirement"
+                            )
+                            os.makedirs(req_file_dir, exist_ok=True)
+                            req_file_path = os.path.join(
+                                req_file_dir, "requirements_parsed.json"
+                            )
+                            with open(req_file_path, "w", encoding="utf-8") as f:
+                                json.dump(
+                                    parsed["functional_requirements"],
+                                    f,
+                                    ensure_ascii=False,
+                                    indent=2,
+                                )
+                            print(f"✅ 已保存功能点到: {req_file_path}")
             except Exception as e:
                 print(f"JSON parse error: {e}")
 
