@@ -5,6 +5,7 @@
 """
 
 import json
+import os
 import time
 from datetime import datetime
 from typing import Dict, List, Any, Optional
@@ -398,7 +399,11 @@ class GLMService(AIServiceBase):
                 )
 
                 # Get response content
-                if response and hasattr(response, "choices") and len(response.choices) > 0:
+                if (
+                    response
+                    and hasattr(response, "choices")
+                    and len(response.choices) > 0
+                ):
                     if model != self.model:
                         print(f"⚠️ 模型 {self.model} 不可用，已回退到 {model}")
                     print(f"✅ GLM API 调用成功，模型: {model}")
@@ -411,9 +416,13 @@ class GLMService(AIServiceBase):
                 error_msg = str(e)
                 last_error = error_msg
                 print(f"⚠️ 模型 {model} 调用失败: {error_msg[:100]}")
-                
+
                 # 如果是认证错误或API key错误，不需要尝试其他模型
-                if "401" in error_msg or "403" in error_msg or "invalid" in error_msg.lower():
+                if (
+                    "401" in error_msg
+                    or "403" in error_msg
+                    or "invalid" in error_msg.lower()
+                ):
                     break
                 continue
 
@@ -531,6 +540,19 @@ def get_ai_service(
         return service_class(api_key, model or "glm-4-plus")
 
     return service_class(api_key)
+
+
+def get_configured_ai_service() -> AIServiceBase:
+    """获取配置好的 AI 服务实例，保留兼容性：GLM_API_KEY/ZHIPUAI_API_KEY + 模型版本"""
+    glm_api_key = os.environ.get("GLM_API_KEY") or os.environ.get("ZHIPUAI_API_KEY")
+    glm_model = os.environ.get("GLM_MODEL") or os.environ.get(
+        "ZHIPUAI_MODEL", "glm-4.7"
+    )
+    if glm_api_key:
+        return get_ai_service("glm", api_key=glm_api_key, model=glm_model)
+    else:
+        print("⚠️ 未配置 GLM_API_KEY，使用 Mock 服务")
+        return get_ai_service("mock")
 
 
 # ==================== 测试文档生成器 ====================

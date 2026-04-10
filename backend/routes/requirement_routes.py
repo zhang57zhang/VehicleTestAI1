@@ -1,3 +1,5 @@
+"""后端需求路由：对需求 (Requirement) 的增删改查 API。"""
+
 from flask import Blueprint, request, jsonify
 import uuid
 
@@ -9,7 +11,11 @@ requirement_bp = Blueprint("requirement_routes", __name__)
 
 @requirement_bp.route("/api/requirements/<project_id>", methods=["GET"])
 def get_requirements(project_id):
-    """获取需求列表"""
+    """获取指定项目的全部需求列表
+
+    参数：project_id - 项目ID
+    返回：包含需求字典列表的 JSON，这些字典通过 to_dict() 序列化。
+    """
     try:
         requirements = Requirement.query.filter_by(project_id=project_id).all()
         return jsonify(
@@ -21,7 +27,11 @@ def get_requirements(project_id):
 
 @requirement_bp.route("/api/requirements", methods=["POST"])
 def create_requirement():
-    """创建需求"""
+    """创建一个新的需求点
+
+    请求体应包含以下字段：project_id, name, category, priority, description, source, linkedReqs
+    返回：新创建的需求对象字典及 201 状态码
+    """
     try:
         data = request.json
         req_id = str(uuid.uuid4())
@@ -45,7 +55,11 @@ def create_requirement():
 
 @requirement_bp.route("/api/requirements/<req_id>", methods=["DELETE"])
 def delete_requirement(req_id):
-    """删除需求"""
+    """删除指定需求
+
+    参数：req_id - 需求ID
+    返回：删除成功标识或错误信息。
+    """
     try:
         requirement = Requirement.query.get(req_id)
         if not requirement:
@@ -60,7 +74,11 @@ def delete_requirement(req_id):
 
 @requirement_bp.route("/api/requirements/<req_id>", methods=["PUT"])
 def update_requirement(req_id):
-    """更新需求"""
+    """更新指定需求的字段
+
+    允许更新的字段包括：name, description, category, priority
+    返回：更新后的需求对象字典，失败时返回错误信息。
+    """
     try:
         requirement = Requirement.query.get(req_id)
         if not requirement:

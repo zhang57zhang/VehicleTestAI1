@@ -1,3 +1,8 @@
+"""文件上传相关 API 路由。
+
+提供对上传文件的处理与校验，确保文件类型在允许清单内，并将文件保存到项目工作目录中。
+"""
+
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
 import os
@@ -29,12 +34,18 @@ ALLOWED_EXTENSIONS = {
 
 
 def allowed_file_upload(filename):
+    """检查上传的文件扩展名是否在允许列表中"""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @file_bp.route("/api/upload/<project_id>/<file_type>", methods=["POST"])
 def upload_file(project_id, file_type):
-    """上传文件"""
+    """上传文件到指定项目及类别
+
+    流程：校验请求中的文件、检查扩展名、保存到 uploads/{project_id}/{file_type}/ 目录。
+    返回：文件信息字典，包括文件ID、路径和名称。
+    出错时返回相应的错误信息。
+    """
     try:
         if "file" not in request.files:
             return jsonify({"success": False, "error": "No file provided"}), 400
