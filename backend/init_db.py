@@ -1,155 +1,73 @@
-# VehicleTestAI1 - 数据库初始化脚本
+# -*- coding: utf-8 -*-
+"""
+VehicleTestAI - 数据库初始化脚本
+创建所有表并添加必要的初始数据
+"""
 
-import sqlite3
 import os
-from datetime import datetime
+import sys
 
-# 数据库路径
-DB_PATH = '/home/qw/.openclaw/workspace/VehicleTestAI1/backend/data/vehicletestai.db'
+# 添加父目录到路径
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from flask import Flask
+from models import db, ActivityState
+from utils.config import get_config
 
 def init_database():
     """初始化数据库"""
+    config = get_config()
     
-    # 确保目录存在
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    app = Flask(__name__)
+    app.config["SQLALCHEMY_DATABASE_URI"] = config.database.uri
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
-    # 连接数据库
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+    db.init_app(app)
     
-    print("🔧 正在创建数据库表...")
+    with app.app_context():
+        # 创建所有表
+        db.create_all()
+        print("[OK] Database tables created")
+        
+        # 验证表结构
+        inspector = db.inspect(db.engine)
+        tables = inspector.get_table_names()
+        print(f"[OK] Tables: {', '.join(tables)}")
+        
+        return True
+
+
+def migrate_database():
+    """数据库迁移 - 添加新表"""
+    app = Flask(__name__)
     
-    # 创建项目表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS projects (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            description TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "data", "vehicletestai.db")
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
-    # 创建需求点表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS requirements (
-            id TEXT PRIMARY KEY,
-            project_id TEXT NOT NULL,
-            name TEXT NOT NULL,
-            category TEXT,
-            priority TEXT,
-            description TEXT,
-            source TEXT,
-            linked_reqs TEXT,
-            reviewed BOOLEAN DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (project_id) REFERENCES projects(id)
-        )
-    ''')
+    db.init_app(app)
     
-    # 创建测试策略表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS test_strategies (
-            id TEXT PRIMARY KEY,
-            project_id TEXT NOT NULL,
-            name TEXT NOT NULL,
-            content TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (project_id) REFERENCES projects(id)
-        )
-    ''')
-    
-    # 创建测试设计表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS test_designs (
-            id TEXT PRIMARY KEY,
-            project_id TEXT NOT NULL,
-            requirement_id TEXT,
-            name TEXT NOT NULL,
-            content TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (project_id) REFERENCES projects(id)
-        )
-    ''')
-    
-    # 创建测试用例表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS test_cases (
-            id TEXT PRIMARY KEY,
-            project_id TEXT NOT NULL,
-            design_id TEXT,
-            name TEXT NOT NULL,
-            priority TEXT,
-            steps TEXT,
-            expected TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (project_id) REFERENCES projects(id)
-        )
-    ''')
-    
-    # 创建测试日志表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS test_logs (
-            id TEXT PRIMARY KEY,
-            project_id TEXT NOT NULL,
-            signal TEXT,
-            value TEXT,
-            unit TEXT,
-            pass BOOLEAN,
-            timestamp TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (project_id) REFERENCES projects(id)
-        )
-    ''')
-    
-    # 创建 DBC 文件表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS dbc_files (
-            id TEXT PRIMARY KEY,
-            project_id TEXT NOT NULL,
-            name TEXT NOT NULL,
-            path TEXT NOT NULL,
-            signal_count INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (project_id) REFERENCES projects(id)
-        )
-    ''')
-    
-    # 创建 AI 历史表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS ai_history (
-            id TEXT PRIMARY KEY,
-            project_id TEXT,
-            type TEXT NOT NULL,
-            input TEXT,
-            output TEXT,
-            tokens_used INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # 创建索引
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_requirements_project ON requirements(project_id)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_strategies_project ON test_strategies(project_id)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_designs_project ON test_designs(project_id)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_cases_project ON test_cases(project_id)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_logs_project ON test_logs(project_id)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_dbc_project ON dbc_files(project_id)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_history_project ON ai_history(project_id)')
-    
-    # 提交更改
-    conn.commit()
-    
-    print("✅ 数据库表创建成功！")
-    
-    # 验证表结构
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-    tables = cursor.fetchall()
-    print(f"📊 已创建 {len(tables)} 个表:")
-    for table in tables:
-        print(f"  - {table[0]}")
-    
-    conn.close()
+    with app.app_context():
+        # 检查并创建新表
+        inspector = db.inspect(db.engine)
+        existing_tables = inspector.get_table_names()
+        
+        # 需要确保存在的表
+        required_tables = [
+            'activity_states',
+            'test_executions'
+        ]
+        
+        for table in required_tables:
+            if table not in existing_tables:
+                print(f"[MIGRATE] Creating table: {table}")
+        
+        # 创建所有缺失的表
+        db.create_all()
+        print("[OK] Migration completed")
+
 
 if __name__ == "__main__":
+    print("Initializing VehicleTestAI database...")
     init_database()
+    print("Done!")
